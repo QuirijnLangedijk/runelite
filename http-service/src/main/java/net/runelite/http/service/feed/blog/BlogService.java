@@ -31,11 +31,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import net.runelite.http.api.RuneLiteAPI;
 import net.runelite.http.api.feed.FeedItem;
 import net.runelite.http.api.feed.FeedItemType;
+import net.runelite.http.service.feed.osrsnews.OSRSNewsService;
 import net.runelite.http.service.util.exception.InternalServerErrorException;
 import okhttp3.HttpUrl;
 import okhttp3.Request;
@@ -66,13 +68,8 @@ public class BlogService
 				throw new IOException("Error getting blog posts: " + response);
 			}
 
-			try
-			{
-				InputStream in = response.body().byteStream();
-				Document document = DocumentBuilderFactory.newInstance()
-						.newDocumentBuilder()
-						.parse(in);
-
+			try {
+				Document document = OSRSNewsService.createNewDocument(response)
 				Element documentElement = document.getDocumentElement();
 				NodeList documentItems = documentElement.getElementsByTagName("entry");
 
