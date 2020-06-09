@@ -27,37 +27,35 @@ package net.runelite.cache.definitions.loaders;
 import net.runelite.cache.definitions.FramemapDefinition;
 import net.runelite.cache.io.InputStream;
 
+import java.io.IOException;
+
 public class FramemapLoader
 {
-	public FramemapDefinition load(int id, byte[] b)
-	{
-		FramemapDefinition def = new FramemapDefinition();
-		InputStream in = new InputStream(b);
+	public FramemapDefinition load(int id, byte[] b) throws IOException {
+		try (InputStream in = new InputStream(b)) {
+			FramemapDefinition def = new FramemapDefinition();
 
-		def.id = id;
+			def.id = id;
 
-		def.length = in.readUnsignedByte();
-		def.types = new int[def.length];
-		def.frameMaps = new int[def.length][];
+			def.length = in.readUnsignedByte();
+			def.types = new int[def.length];
+			def.frameMaps = new int[def.length][];
 
-		for (int i = 0; i < def.length; ++i)
-		{
-			def.types[i] = in.readUnsignedByte();
-		}
-
-		for (int i = 0; i < def.length; ++i)
-		{
-			def.frameMaps[i] = new int[in.readUnsignedByte()];
-		}
-
-		for (int i = 0; i < def.length; ++i)
-		{
-			for (int j = 0; j < def.frameMaps[i].length; ++j)
-			{
-				def.frameMaps[i][j] = in.readUnsignedByte();
+			for (int i = 0; i < def.length; ++i) {
+				def.types[i] = in.readUnsignedByte();
 			}
-		}
 
-		return def;
+			for (int i = 0; i < def.length; ++i) {
+				def.frameMaps[i] = new int[in.readUnsignedByte()];
+			}
+
+			for (int i = 0; i < def.length; ++i) {
+				for (int j = 0; j < def.frameMaps[i].length; ++j) {
+					def.frameMaps[i][j] = in.readUnsignedByte();
+				}
+			}
+
+			return def;
+		}
 	}
 }

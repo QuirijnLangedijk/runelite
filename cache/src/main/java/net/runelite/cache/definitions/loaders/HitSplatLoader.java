@@ -27,107 +27,100 @@ package net.runelite.cache.definitions.loaders;
 import net.runelite.cache.definitions.HitSplatDefinition;
 import net.runelite.cache.io.InputStream;
 
-public class HitSplatLoader
-{
-	public HitSplatDefinition load(byte[] data)
-	{
-		HitSplatDefinition def = new HitSplatDefinition();
-		InputStream stream = new InputStream(data);
+import java.io.IOException;
 
-		for (; ; )
-		{
-			int opcode = stream.readUnsignedByte();
+public class HitSplatLoader {
+    public HitSplatDefinition load(byte[] data) throws IOException {
+        try (InputStream stream = new InputStream(data)) {
+            HitSplatDefinition def = new HitSplatDefinition();
 
-			switch (opcode)
-			{
-				case 0:
-					return def;
-				case 1:
-					def.setFontType(stream.readBigSmart2());
-					break;
-				case 2:
-					def.setTextColor(stream.read24BitInt());
-					break;
-				case 3:
-					def.setLeftSprite(stream.readBigSmart2());
-					break;
-				case 4:
-					def.setLeftSprite2(stream.readBigSmart2());
-					break;
-				case 5:
-					def.setBackgroundSprite(stream.readBigSmart2());
-					break;
-				case 6:
-					def.setRightSpriteId(stream.readBigSmart2());
-					break;
-				case 7:
-					def.setScrollToOffsetX(stream.readShort());
-					break;
-				case 8:
-					def.setStringFormat(stream.readString2());
-					break;
-				case 9:
-					def.setDisplayCycles(stream.readUnsignedShort());
-					break;
-				case 10:
-					def.setScrollToOffsetY(stream.readShort());
-					break;
-				case 11:
-					def.setFadeStartCycle(0);
-					break;
-				case 12:
-					def.setUseDamage(stream.readUnsignedByte());
-					break;
-				case 13:
-					def.setTextOffsetY(stream.readShort());
-					break;
-				case 14:
-					def.setFadeStartCycle(stream.readUnsignedShort());
-					break;
-				case 17:
-				case 18:
-					int varbitId = stream.readUnsignedShort();
+            for (; ; ) {
+                int opcode = stream.readUnsignedByte();
 
-					if (varbitId == 0xFFFF)
-					{
-						varbitId = -1;
-					}
-					def.setVarbitID(varbitId);
+                switch (opcode) {
+                    case 0:
+                        return def;
+                    case 1:
+                        def.setFontType(stream.readBigSmart2());
+                        break;
+                    case 2:
+                        def.setTextColor(stream.read24BitInt());
+                        break;
+                    case 3:
+                        def.setLeftSprite(stream.readBigSmart2());
+                        break;
+                    case 4:
+                        def.setLeftSprite2(stream.readBigSmart2());
+                        break;
+                    case 5:
+                        def.setBackgroundSprite(stream.readBigSmart2());
+                        break;
+                    case 6:
+                        def.setRightSpriteId(stream.readBigSmart2());
+                        break;
+                    case 7:
+                        def.setScrollToOffsetX(stream.readShort());
+                        break;
+                    case 8:
+                        def.setStringFormat(stream.readString2());
+                        break;
+                    case 9:
+                        def.setDisplayCycles(stream.readUnsignedShort());
+                        break;
+                    case 10:
+                        def.setScrollToOffsetY(stream.readShort());
+                        break;
+                    case 11:
+                        def.setFadeStartCycle(0);
+                        break;
+                    case 12:
+                        def.setUseDamage(stream.readUnsignedByte());
+                        break;
+                    case 13:
+                        def.setTextOffsetY(stream.readShort());
+                        break;
+                    case 14:
+                        def.setFadeStartCycle(stream.readUnsignedShort());
+                        break;
+                    case 17:
+                    case 18:
+                        int varbitId = stream.readUnsignedShort();
 
-					int varp = stream.readUnsignedShort();
-					if (varp == 0xFFFF)
-					{
-						varp = -1;
-					}
-					def.setVarpID(varp);
+                        if (varbitId == 0xFFFF) {
+                            varbitId = -1;
+                        }
+                        def.setVarbitID(varbitId);
 
-					int id = -1;
-					if (opcode == 18)
-					{
-						id = stream.readUnsignedShort();
-						if (id == 0xFFFF)
-						{
-							id = -1;
-						}
-					}
+                        int varp = stream.readUnsignedShort();
+                        if (varp == 0xFFFF) {
+                            varp = -1;
+                        }
+                        def.setVarpID(varp);
 
-					int length = stream.readUnsignedByte();
-					int[] multihitsplats = new int[length + 2];
+                        int id = -1;
+                        if (opcode == 18) {
+                            id = stream.readUnsignedShort();
+                            if (id == 0xFFFF) {
+                                id = -1;
+                            }
+                        }
 
-					for (int i = 0; i <= length; i++)
-					{
-						multihitsplats[i] = stream.readUnsignedShort();
-						if (multihitsplats[i] == 0xFFFF)
-						{
-							multihitsplats[i] = -1;
-						}
-					}
+                        int length = stream.readUnsignedByte();
+                        int[] multihitsplats = new int[length + 2];
 
-					multihitsplats[length + 1] = id;
+                        for (int i = 0; i <= length; i++) {
+                            multihitsplats[i] = stream.readUnsignedShort();
+                            if (multihitsplats[i] == 0xFFFF) {
+                                multihitsplats[i] = -1;
+                            }
+                        }
 
-					def.setMultihitsplats(multihitsplats);
-					break;
-			}
-		}
-	}
+                        multihitsplats[length + 1] = id;
+
+                        def.setMultihitsplats(multihitsplats);
+                        break;
+                }
+            }
+        }
+    }
 }

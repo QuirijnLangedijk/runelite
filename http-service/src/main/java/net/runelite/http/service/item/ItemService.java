@@ -112,18 +112,19 @@ public class ItemService
 
 	private PriceEntry getPrice(Connection con, int itemId, Instant time)
 	{
-		if (time != null)
-		{
-			return con.createQuery("select item, name, price, time, fetched_time from prices t1 join items t2 on t1.item=t2.id where item = :item and time <= :time order by time desc limit 1")
-				.addParameter("item", itemId)
-				.addParameter("time", time.toString())
-				.executeAndFetchFirst(PriceEntry.class);
-		}
-		else
-		{
-			return con.createQuery("select item, name, price, time, fetched_time from prices t1 join items t2 on t1.item=t2.id where item = :item order by time desc limit 1")
-				.addParameter("item", itemId)
-				.executeAndFetchFirst(PriceEntry.class);
+		try {
+			if (time != null) {
+				return con.createQuery("select item, name, price, time, fetched_time from prices t1 join items t2 on t1.item=t2.id where item = :item and time <= :time order by time desc limit 1")
+						.addParameter("item", itemId)
+						.addParameter("time", time.toString())
+						.executeAndFetchFirst(PriceEntry.class);
+			} else {
+				return con.createQuery("select item, name, price, time, fetched_time from prices t1 join items t2 on t1.item=t2.id where item = :item order by time desc limit 1")
+						.addParameter("item", itemId)
+						.executeAndFetchFirst(PriceEntry.class);
+			}
+		} finally {
+			con.close();
 		}
 	}
 

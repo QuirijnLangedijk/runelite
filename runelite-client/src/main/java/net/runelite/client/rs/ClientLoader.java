@@ -256,9 +256,8 @@ public class ClientLoader implements Supplier<Applet>
 		{
 			long vanillaCacheMTime = -1;
 			boolean vanillaCacheIsInvalid = false;
-			try
+			try (JarInputStream vanillaCacheTest = new JarInputStream(Channels.newInputStream(vanilla)))
 			{
-				JarInputStream vanillaCacheTest = new JarInputStream(Channels.newInputStream(vanilla));
 				vanillaCacheTest.skip(Long.MAX_VALUE);
 				JarEntry je = vanillaCacheTest.getNextJarEntry();
 				if (je != null)
@@ -372,13 +371,14 @@ public class ClientLoader implements Supplier<Applet>
 					{
 						// the cache is not up to date, commit our peek to the file and write the rest of it, while verifying
 						vanilla.position(0);
-						OutputStream out = Channels.newOutputStream(vanilla);
-						out.write(preRead.toByteArray());
-						copyStream.setOut(out);
-						verifyWholeJar(networkJIS, jagexCertificateChain);
-						copyStream.skip(Long.MAX_VALUE); // write the trailer to the file too
-						out.flush();
-						vanilla.truncate(vanilla.position());
+						try (OutputStream out = Channels.newOutputStream(vanilla)) {
+							out.write(preRead.toByteArray());
+							copyStream.setOut(out);
+							verifyWholeJar(networkJIS, jagexCertificateChain);
+							copyStream.skip(Long.MAX_VALUE); // write the trailer to the file too
+							out.flush();
+							vanilla.truncate(vanilla.position());
+						}
 					}
 					else
 					{

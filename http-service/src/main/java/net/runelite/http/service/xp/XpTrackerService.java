@@ -193,37 +193,44 @@ public class XpTrackerService
 
 	private synchronized PlayerEntity findOrCreatePlayer(Connection con, String username)
 	{
-		PlayerEntity playerEntity = con.createQuery("select * from player where name = :name")
-			.addParameter("name", username)
-			.executeAndFetchFirst(PlayerEntity.class);
-		if (playerEntity != null)
-		{
+		try {
+			PlayerEntity playerEntity = con.createQuery("select * from player where name = :name")
+					.addParameter("name", username)
+					.executeAndFetchFirst(PlayerEntity.class);
+			if (playerEntity != null) {
+				return playerEntity;
+			}
+
+			Instant now = Instant.now();
+
+			int id = con.createQuery("insert into player (name, tracked_since) values (:name, :tracked_since)")
+					.addParameter("name", username)
+					.addParameter("tracked_since", now)
+					.executeUpdate()
+					.getKey(int.class);
+
+			playerEntity = new PlayerEntity();
+			playerEntity.setId(id);
+			playerEntity.setName(username);
+			playerEntity.setTracked_since(now);
+			playerEntity.setLast_updated(now);
 			return playerEntity;
+		} finally {
+			con.close();
 		}
-
-		Instant now = Instant.now();
-
-		int id = con.createQuery("insert into player (name, tracked_since) values (:name, :tracked_since)")
-			.addParameter("name", username)
-			.addParameter("tracked_since", now)
-			.executeUpdate()
-			.getKey(int.class);
-
-		playerEntity = new PlayerEntity();
-		playerEntity.setId(id);
-		playerEntity.setName(username);
-		playerEntity.setTracked_since(now);
-		playerEntity.setLast_updated(now);
-		return playerEntity;
 	}
 
 	private XpEntity findXpAtTime(Connection con, String username, Instant time)
 	{
-		return con.createQuery("select * from xp join player on player.id=xp.player where player.name = :username and time <= :time order by time desc limit 1")
-			.throwOnMappingFailure(false)
-			.addParameter("username", username)
-			.addParameter("time", time)
-			.executeAndFetchFirst(XpEntity.class);
+		try {
+			return con.createQuery("select * from xp join player on player.id=xp.player where player.name = :username and time <= :time order by time desc limit 1")
+					.throwOnMappingFailure(false)
+					.addParameter("username", username)
+					.addParameter("time", time)
+					.executeAndFetchFirst(XpEntity.class);
+		} finally {
+			con.close();
+		}
 	}
 
 	public XpEntity findXpAtTime(String username, Instant time)

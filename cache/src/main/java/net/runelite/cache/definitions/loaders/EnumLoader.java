@@ -30,34 +30,35 @@ import net.runelite.cache.util.ScriptVarType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 public class EnumLoader
 {
 	private static final Logger logger = LoggerFactory.getLogger(EnumLoader.class);
 
-	public EnumDefinition load(int id, byte[] b)
-	{
+	public EnumDefinition load(int id, byte[] b) throws IOException {
 		if (b.length == 1 && b[0] == 0)
 		{
 			return null;
 		}
 
-		EnumDefinition def = new EnumDefinition();
-		InputStream is = new InputStream(b);
+		try (InputStream is = new InputStream(b)) {
+			EnumDefinition def = new EnumDefinition();
 
-		def.setId(id);
+			def.setId(id);
 
-		for (;;)
-		{
-			int opcode = is.readUnsignedByte();
-			if (opcode == 0)
+			for (;;)
 			{
-				break;
+				int opcode = is.readUnsignedByte();
+				if (opcode == 0)
+				{
+					break;
+				}
+
+				processOp(opcode, def, is);
 			}
-
-			processOp(opcode, def, is);
+			return def;
 		}
-
-		return def;
 	}
 
 	private void processOp(int opcode, EnumDefinition def, InputStream is)

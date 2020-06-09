@@ -24,6 +24,7 @@
  */
 package net.runelite.cache.definitions.loaders;
 
+import java.io.IOException;
 import java.util.HashMap;
 import net.runelite.cache.definitions.NpcDefinition;
 import net.runelite.cache.io.InputStream;
@@ -37,19 +38,21 @@ public class NpcLoader
 	public NpcDefinition load(int id, byte[] b)
 	{
 		NpcDefinition def = new NpcDefinition(id);
-		InputStream is = new InputStream(b);
+		try (InputStream is = new InputStream(b)) {
 
-		while (true)
-		{
-			int opcode = is.readUnsignedByte();
-			if (opcode == 0)
-			{
-				break;
+
+			while (true) {
+				int opcode = is.readUnsignedByte();
+				if (opcode == 0) {
+					break;
+				}
+
+				this.decodeValues(opcode, def, is);
 			}
 
-			this.decodeValues(opcode, def, is);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-
 		return def;
 	}
 

@@ -28,115 +28,116 @@ import net.runelite.cache.definitions.FrameDefinition;
 import net.runelite.cache.definitions.FramemapDefinition;
 import net.runelite.cache.io.InputStream;
 
+import java.io.IOException;
+
 public class FrameLoader
 {
-	public FrameDefinition load(FramemapDefinition framemap, int id, byte[] b)
-	{
-		FrameDefinition def = new FrameDefinition();
-		InputStream in = new InputStream(b);
-		InputStream data = new InputStream(b);
+	public FrameDefinition load(FramemapDefinition framemap, int id, byte[] b) throws IOException {
+		try (InputStream in = new InputStream(b); InputStream data = new InputStream(b)) {
 
-		def.id = id;
-		def.framemap = framemap;
+			FrameDefinition def = new FrameDefinition();
+			def.id = id;
+			def.framemap = framemap;
 
-		int framemapArchiveIndex = in.readUnsignedShort();
-		int length = in.readUnsignedByte();
+			int framemapArchiveIndex = in.readUnsignedShort();
+			int length = in.readUnsignedByte();
 
-		data.skip(3 + length); // framemapArchiveIndex + length + data
+			data.skip(3 + length); // framemapArchiveIndex + length + data
 
-		int[] indexFrameIds = new int[500];
-		int[] scratchTranslatorX = new int[500];
-		int[] scratchTranslatorY = new int[500];
-		int[] scratchTranslatorZ = new int[500];
+			int[] indexFrameIds = new int[500];
+			int[] scratchTranslatorX = new int[500];
+			int[] scratchTranslatorY = new int[500];
+			int[] scratchTranslatorZ = new int[500];
 
-		int lastI = -1;
-		int index = 0;
-		for (int i = 0; i < length; ++i)
-		{
-			int var9 = in.readUnsignedByte();
-
-			if (var9 <= 0)
+			int lastI = -1;
+			int index = 0;
+			for (int i = 0; i < length; ++i)
 			{
-				continue;
-			}
+				int var9 = in.readUnsignedByte();
 
-			if (def.framemap.types[i] != 0)
-			{
-				for (int var10 = i - 1; var10 > lastI; --var10)
+				if (var9 <= 0)
 				{
-					if (def.framemap.types[var10] == 0)
+					continue;
+				}
+
+				if (def.framemap.types[i] != 0)
+				{
+					for (int var10 = i - 1; var10 > lastI; --var10)
 					{
-						indexFrameIds[index] = var10;
-						scratchTranslatorX[index] = 0;
-						scratchTranslatorY[index] = 0;
-						scratchTranslatorZ[index] = 0;
-						++index;
-						break;
+						if (def.framemap.types[var10] == 0)
+						{
+							indexFrameIds[index] = var10;
+							scratchTranslatorX[index] = 0;
+							scratchTranslatorY[index] = 0;
+							scratchTranslatorZ[index] = 0;
+							++index;
+							break;
+						}
 					}
+				}
+
+				indexFrameIds[index] = i;
+				short var11 = 0;
+				if (def.framemap.types[i] == 3)
+				{
+					var11 = 128;
+				}
+
+				if ((var9 & 1) != 0)
+				{
+					scratchTranslatorX[index] = data.readShortSmart();
+				}
+				else
+				{
+					scratchTranslatorX[index] = var11;
+				}
+
+				if ((var9 & 2) != 0)
+				{
+					scratchTranslatorY[index] = data.readShortSmart();
+				}
+				else
+				{
+					scratchTranslatorY[index] = var11;
+				}
+
+				if ((var9 & 4) != 0)
+				{
+					scratchTranslatorZ[index] = data.readShortSmart();
+				}
+				else
+				{
+					scratchTranslatorZ[index] = var11;
+				}
+
+				lastI = i;
+				++index;
+				if (def.framemap.types[i] == 5)
+				{
+					def.showing = true;
 				}
 			}
 
-			indexFrameIds[index] = i;
-			short var11 = 0;
-			if (def.framemap.types[i] == 3)
+			if (data.getOffset() != b.length)
 			{
-				var11 = 128;
+				throw new RuntimeException();
 			}
 
-			if ((var9 & 1) != 0)
+			def.translatorCount = index;
+			def.indexFrameIds = new int[index];
+			def.translator_x = new int[index];
+			def.translator_y = new int[index];
+			def.translator_z = new int[index];
+
+			for (int i = 0; i < index; ++i)
 			{
-				scratchTranslatorX[index] = data.readShortSmart();
-			}
-			else
-			{
-				scratchTranslatorX[index] = var11;
+				def.indexFrameIds[i] = indexFrameIds[i];
+				def.translator_x[i] = scratchTranslatorX[i];
+				def.translator_y[i] = scratchTranslatorY[i];
+				def.translator_z[i] = scratchTranslatorZ[i];
 			}
 
-			if ((var9 & 2) != 0)
-			{
-				scratchTranslatorY[index] = data.readShortSmart();
-			}
-			else
-			{
-				scratchTranslatorY[index] = var11;
-			}
-
-			if ((var9 & 4) != 0)
-			{
-				scratchTranslatorZ[index] = data.readShortSmart();
-			}
-			else
-			{
-				scratchTranslatorZ[index] = var11;
-			}
-
-			lastI = i;
-			++index;
-			if (def.framemap.types[i] == 5)
-			{
-				def.showing = true;
-			}
+			return def;
 		}
-
-		if (data.getOffset() != b.length)
-		{
-			throw new RuntimeException();
-		}
-
-		def.translatorCount = index;
-		def.indexFrameIds = new int[index];
-		def.translator_x = new int[index];
-		def.translator_y = new int[index];
-		def.translator_z = new int[index];
-
-		for (int i = 0; i < index; ++i)
-		{
-			def.indexFrameIds[i] = indexFrameIds[i];
-			def.translator_x[i] = scratchTranslatorX[i];
-			def.translator_y[i] = scratchTranslatorY[i];
-			def.translator_z[i] = scratchTranslatorZ[i];
-		}
-
-		return def;
 	}
 }

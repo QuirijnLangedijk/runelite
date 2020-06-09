@@ -42,8 +42,12 @@ class CacheDAO
 
 	public CacheEntry findMostRecent(Connection con)
 	{
-		return con.createQuery("select id, revision, date from cache order by revision desc, date desc limit 1")
-			.executeAndFetchFirst(CacheEntry.class);
+		try {
+			return con.createQuery("select id, revision, date from cache order by revision desc, date desc limit 1")
+					.executeAndFetchFirst(CacheEntry.class);
+		} finally {
+			con.close();
+		}
 	}
 
 	public List<IndexEntry> findIndexesForCache(Connection con, CacheEntry cache)

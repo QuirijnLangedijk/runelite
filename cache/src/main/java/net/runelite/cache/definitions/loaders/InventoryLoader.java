@@ -27,28 +27,27 @@ package net.runelite.cache.definitions.loaders;
 import net.runelite.cache.definitions.InventoryDefinition;
 import net.runelite.cache.io.InputStream;
 
+import java.io.IOException;
+
 public class InventoryLoader
 {
-	public InventoryDefinition load(int id, byte[] b)
-	{
-		InventoryDefinition def = new InventoryDefinition();
-		def.id = id;
-		InputStream is = new InputStream(b);
+	public InventoryDefinition load(int id, byte[] b) throws IOException {
+		try (InputStream is = new InputStream(b)) {
+			InventoryDefinition def = new InventoryDefinition();
+			def.id = id;
 
-		while (true)
-		{
-			int opcode = is.readUnsignedByte();
-			if (opcode == 0)
-			{
-				break;
+			while (true) {
+				int opcode = is.readUnsignedByte();
+				if (opcode == 0) {
+					break;
+				}
+
+				if (opcode == 2) {
+					def.size = is.readUnsignedShort();
+				}
 			}
 
-			if (opcode == 2)
-			{
-				def.size = is.readUnsignedShort();
-			}
+			return def;
 		}
-
-		return def;
 	}
 }
