@@ -26,30 +26,35 @@ package net.runelite.cache.definitions.loaders;
 
 import net.runelite.cache.definitions.VarbitDefinition;
 import net.runelite.cache.io.InputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 public class VarbitLoader
 {
+
+	private static final Logger logger = LoggerFactory.getLogger(VarbitLoader.class);
 	public VarbitDefinition load(int id, byte[] b)
 	{
 		VarbitDefinition def = new VarbitDefinition();
-		InputStream is = new InputStream(b);
+		try (InputStream is = new InputStream(b)) {
+			def.setId(id);
 
-		def.setId(id);
+			for (; ; ) {
+				int opcode = is.readUnsignedByte();
+				if (opcode == 0) {
+					break;
+				}
 
-		for (;;)
-		{
-			int opcode = is.readUnsignedByte();
-			if (opcode == 0)
-			{
-				break;
+				if (opcode == 1) {
+					def.setIndex(is.readUnsignedShort());
+					def.setLeastSignificantBit(is.readUnsignedByte());
+					def.setMostSignificantBit(is.readUnsignedByte());
+				}
 			}
-
-			if (opcode == 1)
-			{
-				def.setIndex(is.readUnsignedShort());
-				def.setLeastSignificantBit(is.readUnsignedByte());
-				def.setMostSignificantBit(is.readUnsignedByte());
-			}
+		} catch (IOException e) {
+			logger.error(String.valueOf(e));
 		}
 
 		return def;

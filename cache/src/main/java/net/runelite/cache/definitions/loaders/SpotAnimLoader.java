@@ -29,83 +29,65 @@ import net.runelite.cache.io.InputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SpotAnimLoader
-{
-	private static final Logger logger = LoggerFactory.getLogger(SpotAnimLoader.class);
+import java.io.IOException;
 
-	public SpotAnimDefinition load(int id, byte[] b)
-	{
-		SpotAnimDefinition def = new SpotAnimDefinition();
-		InputStream is = new InputStream(b);
-		def.id = id;
+public class SpotAnimLoader {
+    private static final Logger logger = LoggerFactory.getLogger(SpotAnimLoader.class);
 
-		while (true)
-		{
-			int opcode = is.readUnsignedByte();
-			if (opcode == 0)
-			{
-				break;
-			}
+    public SpotAnimDefinition load(int id, byte[] b) {
+        SpotAnimDefinition def = new SpotAnimDefinition();
 
-			this.decodeValues(opcode, def, is);
-		}
+        try (InputStream is = new InputStream(b)) {
+            def.id = id;
 
-		return def;
-	}
+            while (true) {
+                int opcode = is.readUnsignedByte();
+                if (opcode == 0) {
+                    break;
+                }
 
-	private void decodeValues(int opcode, SpotAnimDefinition def, InputStream stream)
-	{
-		if (opcode == 1)
-		{
-			def.modelId = stream.readUnsignedShort();
-		}
-		else if (opcode == 2)
-		{
-			def.animationId = stream.readUnsignedShort();
-		}
-		else if (opcode == 4)
-		{
-			def.resizeX = stream.readUnsignedShort();
-		}
-		else if (opcode == 5)
-		{
-			def.resizeY = stream.readUnsignedShort();
-		}
-		else if (opcode == 6)
-		{
-			def.rotaton = stream.readUnsignedShort();
-		}
-		else if (opcode == 7)
-		{
-			def.ambient = stream.readUnsignedByte();
-		}
-		else if (opcode == 8)
-		{
-			def.contrast = stream.readUnsignedByte();
-		}
-		else if (opcode == 40)
-		{
-			int var3 = stream.readUnsignedByte();
-			def.recolorToFind = new short[var3];
-			def.recolorToReplace = new short[var3];
+                this.decodeValues(opcode, def, is);
+            }
+        } catch (IOException e) {
+            logger.error(String.valueOf(e));
+        }
 
-			for (int var4 = 0; var4 < var3; ++var4)
-			{
-				def.recolorToFind[var4] = (short) stream.readUnsignedShort();
-				def.recolorToReplace[var4] = (short) stream.readUnsignedShort();
-			}
-		}
-		else if (opcode == 41)
-		{
-			int var3 = stream.readUnsignedByte();
-			def.textureToFind = new short[var3];
-			def.textureToReplace = new short[var3];
+        return def;
+    }
 
-			for (int var4 = 0; var4 < var3; ++var4)
-			{
-				def.textureToFind[var4] = (short) stream.readUnsignedShort();
-				def.textureToReplace[var4] = (short) stream.readUnsignedShort();
-			}
-		}
-	}
+    private void decodeValues(int opcode, SpotAnimDefinition def, InputStream stream) {
+        if (opcode == 1) {
+            def.modelId = stream.readUnsignedShort();
+        } else if (opcode == 2) {
+            def.animationId = stream.readUnsignedShort();
+        } else if (opcode == 4) {
+            def.resizeX = stream.readUnsignedShort();
+        } else if (opcode == 5) {
+            def.resizeY = stream.readUnsignedShort();
+        } else if (opcode == 6) {
+            def.rotaton = stream.readUnsignedShort();
+        } else if (opcode == 7) {
+            def.ambient = stream.readUnsignedByte();
+        } else if (opcode == 8) {
+            def.contrast = stream.readUnsignedByte();
+        } else if (opcode == 40) {
+            int var3 = stream.readUnsignedByte();
+            def.recolorToFind = new short[var3];
+            def.recolorToReplace = new short[var3];
+
+            for (int var4 = 0; var4 < var3; ++var4) {
+                def.recolorToFind[var4] = (short) stream.readUnsignedShort();
+                def.recolorToReplace[var4] = (short) stream.readUnsignedShort();
+            }
+        } else if (opcode == 41) {
+            int var3 = stream.readUnsignedByte();
+            def.textureToFind = new short[var3];
+            def.textureToReplace = new short[var3];
+
+            for (int var4 = 0; var4 < var3; ++var4) {
+                def.textureToFind[var4] = (short) stream.readUnsignedShort();
+                def.textureToReplace[var4] = (short) stream.readUnsignedShort();
+            }
+        }
+    }
 }

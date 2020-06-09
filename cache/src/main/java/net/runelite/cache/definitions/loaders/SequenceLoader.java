@@ -26,25 +26,31 @@ package net.runelite.cache.definitions.loaders;
 
 import net.runelite.cache.definitions.SequenceDefinition;
 import net.runelite.cache.io.InputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 public class SequenceLoader
 {
+	private static final Logger logger = LoggerFactory.getLogger(SequenceLoader.class);
 	public SequenceDefinition load(int id, byte[] b)
 	{
+
 		SequenceDefinition def = new SequenceDefinition(id);
-		InputStream is = new InputStream(b);
 
-		while (true)
-		{
-			int opcode = is.readUnsignedByte();
-			if (opcode == 0)
-			{
-				break;
+		try(InputStream is = new InputStream(b)) {
+			while (true) {
+				int opcode = is.readUnsignedByte();
+				if (opcode == 0) {
+					break;
+				}
+
+				this.decodeValues(opcode, def, is);
 			}
-
-			this.decodeValues(opcode, def, is);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-
 		return def;
 	}
 

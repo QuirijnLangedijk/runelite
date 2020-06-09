@@ -25,6 +25,8 @@
 package net.runelite.cache.fs;
 
 import com.google.common.base.Preconditions;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -101,108 +103,103 @@ public class ArchiveFiles
 
 	public void loadContents(byte[] data)
 	{
-		logger.trace("Loading contents of archive ({} files)", files.size());
+		try (InputStream stream = new InputStream(data)) {
+			logger.trace("Loading contents of archive ({} files)", files.size());
 
-		assert !this.getFiles().isEmpty();
+			assert !this.getFiles().isEmpty();
 
-		if (this.getFiles().size() == 1)
-		{
-			this.getFiles().get(0).setContents(data);
-			return;
-		}
-
-		int filesCount = this.getFiles().size();
-
-		InputStream stream = new InputStream(data);
-		stream.setOffset(stream.getLength() - 1);
-		int chunks = stream.readUnsignedByte();
-
-		// -1 for chunks count + one int per file slot per chunk
-		stream.setOffset(stream.getLength() - 1 - chunks * filesCount * 4);
-		int[][] chunkSizes = new int[filesCount][chunks];
-		int[] filesSize = new int[filesCount];
-
-		for (int chunk = 0; chunk < chunks; ++chunk)
-		{
-			int chunkSize = 0;
-
-			for (int id = 0; id < filesCount; ++id)
-			{
-				int delta = stream.readInt();
-				chunkSize += delta; // size of this chunk
-
-				chunkSizes[id][chunk] = chunkSize; // store size of chunk
-
-				filesSize[id] += chunkSize; // add chunk size to file size
+			if (this.getFiles().size() == 1) {
+				this.getFiles().get(0).setContents(data);
+				return;
 			}
-		}
 
-		byte[][] fileContents = new byte[filesCount][];
-		int[] fileOffsets = new int[filesCount];
+			int filesCount = this.getFiles().size();
 
-		for (int i = 0; i < filesCount; ++i)
-		{
-			fileContents[i] = new byte[filesSize[i]];
-		}
+			stream.setOffset(stream.getLength() - 1);
+			int chunks = stream.readUnsignedByte();
 
-		// the file data is at the beginning of the stream
-		stream.setOffset(0);
+			// -1 for chunks count + one int per file slot per chunk
+			stream.setOffset(stream.getLength() - 1 - chunks * filesCount * 4);
+			int[][] chunkSizes = new int[filesCount][chunks];
+			int[] filesSize = new int[filesCount];
 
-		for (int chunk = 0; chunk < chunks; ++chunk)
-		{
-			for (int id = 0; id < filesCount; ++id)
-			{
-				int chunkSize = chunkSizes[id][chunk];
+			for (int chunk = 0; chunk < chunks; ++chunk) {
+				int chunkSize = 0;
 
-				stream.readBytes(fileContents[id], fileOffsets[id], chunkSize);
+				for (int id = 0; id < filesCount; ++id) {
+					int delta = stream.readInt();
+					chunkSize += delta; // size of this chunk
 
-				fileOffsets[id] += chunkSize;
+					chunkSizes[id][chunk] = chunkSize; // store size of chunk
+
+					filesSize[id] += chunkSize; // add chunk size to file size
+				}
 			}
-		}
 
-		for (int i = 0; i < filesCount; ++i)
-		{
-			FSFile f = this.getFiles().get(i);
-			f.setContents(fileContents[i]);
+			byte[][] fileContents = new byte[filesCount][];
+			int[] fileOffsets = new int[filesCount];
+
+			for (int i = 0; i < filesCount; ++i) {
+				fileContents[i] = new byte[filesSize[i]];
+			}
+
+			// the file data is at the beginning of the stream
+			stream.setOffset(0);
+
+			for (int chunk = 0; chunk < chunks; ++chunk) {
+				for (int id = 0; id < filesCount; ++id) {
+					int chunkSize = chunkSizes[id][chunk];
+
+					stream.readBytes(fileContents[id], fileOffsets[id], chunkSize);
+
+					fileOffsets[id] += chunkSize;
+				}
+			}
+
+			for (int i = 0; i < filesCount; ++i) {
+				FSFile f = this.getFiles().get(i);
+				f.setContents(fileContents[i]);
+			}
+		} catch (IOException e) {
+			logger.error(String.valueOf(e));
 		}
 	}
 
 	public byte[] saveContents()
 	{
-		OutputStream stream = new OutputStream();
+		try (OutputStream stream = new OutputStream()) {
 
-		int filesCount = this.getFiles().size();
+			int filesCount = this.getFiles().size();
 
-		if (filesCount == 1)
-		{
-			FSFile file = this.getFiles().get(0);
-			stream.writeBytes(file.getContents());
-		}
-		else
-		{
-			for (FSFile file : this.getFiles())
-			{
-				byte[] contents = file.getContents();
-				stream.writeBytes(contents);
+			if (filesCount == 1) {
+				FSFile file = this.getFiles().get(0);
+				stream.writeBytes(file.getContents());
+			} else {
+				for (FSFile file : this.getFiles()) {
+					byte[] contents = file.getContents();
+					stream.writeBytes(contents);
+				}
+
+				int offset = 0;
+
+				for (FSFile file : this.getFiles()) {
+					int chunkSize = file.getSize();
+
+					int sz = chunkSize - offset;
+					offset = chunkSize;
+					stream.writeInt(sz);
+				}
+
+				stream.writeByte(1); // chunks
 			}
 
-			int offset = 0;
+			byte[] fileData = stream.flip();
 
-			for (FSFile file : this.getFiles())
-			{
-				int chunkSize = file.getSize();
-
-				int sz = chunkSize - offset;
-				offset = chunkSize;
-				stream.writeInt(sz);
-			}
-
-			stream.writeByte(1); // chunks
+			logger.trace("Saved contents of archive ({} files), {} bytes", files.size(), fileData.length);
+			return fileData;
+		} catch (IOException e) {
+			logger.error(String.valueOf(e));
+			return null;
 		}
-
-		byte[] fileData = stream.flip();
-
-		logger.trace("Saved contents of archive ({} files), {} bytes", files.size(), fileData.length);
-		return fileData;
 	}
 }

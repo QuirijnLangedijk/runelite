@@ -38,9 +38,8 @@ public class NpcLoader
 	public NpcDefinition load(int id, byte[] b)
 	{
 		NpcDefinition def = new NpcDefinition(id);
+
 		try (InputStream is = new InputStream(b)) {
-
-
 			while (true) {
 				int opcode = is.readUnsignedByte();
 				if (opcode == 0) {
@@ -49,9 +48,8 @@ public class NpcLoader
 
 				this.decodeValues(opcode, def, is);
 			}
-
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(String.valueOf(e));
 		}
 		return def;
 	}

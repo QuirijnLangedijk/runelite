@@ -24,26 +24,30 @@
  */
 package net.runelite.cache.definitions.loaders;
 
+import java.io.IOException;
 import java.util.HashMap;
 import net.runelite.cache.definitions.StructDefinition;
 import net.runelite.cache.io.InputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class StructLoader
 {
+	private static final Logger logger = LoggerFactory.getLogger(StructLoader.class);
 	public StructDefinition load(int id, byte[] b)
 	{
 		StructDefinition def = new StructDefinition(id);
-		InputStream is = new InputStream(b);
+		try (InputStream is = new InputStream(b)) {
+			while (true) {
+				int opcode = is.readUnsignedByte();
+				if (opcode == 0) {
+					break;
+				}
 
-		while (true)
-		{
-			int opcode = is.readUnsignedByte();
-			if (opcode == 0)
-			{
-				break;
+				this.decodeValues(opcode, def, is);
 			}
-
-			this.decodeValues(opcode, def, is);
+		} catch (IOException e) {
+			logger.error(String.valueOf(e));
 		}
 
 		return def;

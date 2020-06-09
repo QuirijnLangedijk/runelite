@@ -26,53 +26,61 @@ package net.runelite.cache.definitions.savers;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import net.runelite.cache.definitions.LocationsDefinition;
 import net.runelite.cache.io.OutputStream;
 import net.runelite.cache.region.Location;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LocationSaver
 {
+	private static final Logger logger = LoggerFactory.getLogger(LocationSaver.class);
+
 	public byte[] save(LocationsDefinition locs)
 	{
-		Multimap<Integer, Location> locById = LinkedListMultimap.create();
-		List<Location> sortedLocs = new ArrayList<>(locs.getLocations());
-		sortedLocs.sort((l1, l2) -> Integer.compare(l1.getId(), l2.getId()));
-		for (Location loc : sortedLocs)
-		{
-			locById.put(loc.getId(), loc);
-		}
-		OutputStream out = new OutputStream();
-		int prevId = -1;
-		for (Integer id : locById.keySet())
-		{
-			int diffId = id - prevId;
-			prevId = id;
-
-			out.writeShortSmart(diffId);
-
-			Collection<Location> locations = locById.get(id);
-			int position = 0;
-			for (Location loc : locations)
-			{
-				int packedPosition = (loc.getPosition().getZ() << 12)
-					| (loc.getPosition().getX() << 6)
-					| (loc.getPosition().getY());
-
-				int diffPos = packedPosition - position;
-				position = packedPosition;
-
-				out.writeShortSmart(diffPos + 1);
-
-				int packedAttributes = (loc.getType() << 2) | loc.getOrientation();
-				out.writeByte(packedAttributes);
+		try (OutputStream out = new OutputStream()) {
+			Multimap<Integer, Location> locById = LinkedListMultimap.create();
+			List<Location> sortedLocs = new ArrayList<>(locs.getLocations());
+			sortedLocs.sort((l1, l2) -> Integer.compare(l1.getId(), l2.getId()));
+			for (Location loc : sortedLocs) {
+				locById.put(loc.getId(), loc);
 			}
 
+			int prevId = -1;
+			for (Integer id : locById.keySet()) {
+				int diffId = id - prevId;
+				prevId = id;
+
+				out.writeShortSmart(diffId);
+
+				Collection<Location> locations = locById.get(id);
+				int position = 0;
+				for (Location loc : locations) {
+					int packedPosition = (loc.getPosition().getZ() << 12)
+							| (loc.getPosition().getX() << 6)
+							| (loc.getPosition().getY());
+
+					int diffPos = packedPosition - position;
+					position = packedPosition;
+
+					out.writeShortSmart(diffPos + 1);
+
+					int packedAttributes = (loc.getType() << 2) | loc.getOrientation();
+					out.writeByte(packedAttributes);
+				}
+
+				out.writeShortSmart(0);
+			}
 			out.writeShortSmart(0);
+			return out.flip();
+		} catch (IOException e) {
+			logger.error(String.valueOf(e));
+			return null;
 		}
-		out.writeShortSmart(0);
-		return out.flip();
 	}
 }

@@ -24,11 +24,17 @@
  */
 package net.runelite.cache.index;
 
+import net.runelite.cache.definitions.savers.ScriptSaver;
 import net.runelite.cache.io.InputStream;
 import net.runelite.cache.io.OutputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 public class IndexData
 {
+	private static final Logger logger = LoggerFactory.getLogger(IndexData.class);
 	private int protocol;
 	private int revision;
 	private boolean named;
@@ -36,103 +42,93 @@ public class IndexData
 
 	public void load(byte[] data)
 	{
-		InputStream stream = new InputStream(data);
-		protocol = stream.readUnsignedByte();
-		if (protocol < 5 || protocol > 7)
-		{
-			throw new IllegalArgumentException("Unsupported protocol");
-		}
+		try(InputStream stream = new InputStream(data)) {
 
-		if (protocol >= 6)
-		{
-			this.revision = stream.readInt();
-		}
+			protocol = stream.readUnsignedByte();
+			if (protocol < 5 || protocol > 7) {
+				throw new IllegalArgumentException("Unsupported protocol");
+			}
 
-		int hash = stream.readUnsignedByte();
-		named = (1 & hash) != 0;
-		if ((hash & ~1) != 0)
-		{
-			throw new IllegalArgumentException("Unknown flags");
-		}
-		assert (hash & ~3) == 0;
-		int validArchivesCount = protocol >= 7 ? stream.readBigSmart() : stream.readUnsignedShort();
-		int lastArchiveId = 0;
+			if (protocol >= 6) {
+				this.revision = stream.readInt();
+			}
 
-		archives = new ArchiveData[validArchivesCount];
+			int hash = stream.readUnsignedByte();
+			named = (1 & hash) != 0;
+			if ((hash & ~1) != 0) {
+				throw new IllegalArgumentException("Unknown flags");
+			}
+			assert (hash & ~3) == 0;
+			int validArchivesCount = protocol >= 7 ? stream.readBigSmart() : stream.readUnsignedShort();
+			int lastArchiveId = 0;
 
-		for (int index = 0; index < validArchivesCount; ++index)
-		{
-			int archive = lastArchiveId += protocol >= 7 ? stream.readBigSmart() : stream.readUnsignedShort();
+			archives = new ArchiveData[validArchivesCount];
 
-			ArchiveData ad = new ArchiveData();
-			ad.id = archive;
-			archives[index] = ad;
-		}
+			for (int index = 0; index < validArchivesCount; ++index) {
+				int archive = lastArchiveId += protocol >= 7 ? stream.readBigSmart() : stream.readUnsignedShort();
 
-		if (named)
-		{
-			for (int index = 0; index < validArchivesCount; ++index)
-			{
-				int nameHash = stream.readInt();
+				ArchiveData ad = new ArchiveData();
+				ad.id = archive;
+				archives[index] = ad;
+			}
+
+			if (named) {
+				for (int index = 0; index < validArchivesCount; ++index) {
+					int nameHash = stream.readInt();
+					ArchiveData ad = archives[index];
+					ad.nameHash = nameHash;
+				}
+			}
+
+			for (int index = 0; index < validArchivesCount; ++index) {
+				int crc = stream.readInt();
+
 				ArchiveData ad = archives[index];
-				ad.nameHash = nameHash;
+				ad.crc = crc;
 			}
-		}
 
-		for (int index = 0; index < validArchivesCount; ++index)
-		{
-			int crc = stream.readInt();
+			for (int index = 0; index < validArchivesCount; ++index) {
+				int revision = stream.readInt();
 
-			ArchiveData ad = archives[index];
-			ad.crc = crc;
-		}
-
-		for (int index = 0; index < validArchivesCount; ++index)
-		{
-			int revision = stream.readInt();
-
-			ArchiveData ad = archives[index];
-			ad.revision = revision;
-		}
-
-		int[] numberOfFiles = new int[validArchivesCount];
-		for (int index = 0; index < validArchivesCount; ++index)
-		{
-			int num = protocol >= 7 ? stream.readBigSmart() : stream.readUnsignedShort();
-			numberOfFiles[index] = num;
-		}
-
-		for (int index = 0; index < validArchivesCount; ++index)
-		{
-			ArchiveData ad = archives[index];
-			int num = numberOfFiles[index];
-
-			ad.files = new FileData[num];
-
-			int last = 0;
-			for (int i = 0; i < num; ++i)
-			{
-				int fileId = last += protocol >= 7 ? stream.readBigSmart() : stream.readUnsignedShort();
-
-				FileData fd = ad.files[i] = new FileData();
-				fd.id = fileId;
+				ArchiveData ad = archives[index];
+				ad.revision = revision;
 			}
-		}
 
-		if (named)
-		{
-			for (int index = 0; index < validArchivesCount; ++index)
-			{
+			int[] numberOfFiles = new int[validArchivesCount];
+			for (int index = 0; index < validArchivesCount; ++index) {
+				int num = protocol >= 7 ? stream.readBigSmart() : stream.readUnsignedShort();
+				numberOfFiles[index] = num;
+			}
+
+			for (int index = 0; index < validArchivesCount; ++index) {
 				ArchiveData ad = archives[index];
 				int num = numberOfFiles[index];
 
-				for (int i = 0; i < num; ++i)
-				{
-					FileData fd = ad.files[i];
-					int name = stream.readInt();
-					fd.nameHash = name;
+				ad.files = new FileData[num];
+
+				int last = 0;
+				for (int i = 0; i < num; ++i) {
+					int fileId = last += protocol >= 7 ? stream.readBigSmart() : stream.readUnsignedShort();
+
+					FileData fd = ad.files[i] = new FileData();
+					fd.id = fileId;
 				}
 			}
+
+			if (named) {
+				for (int index = 0; index < validArchivesCount; ++index) {
+					ArchiveData ad = archives[index];
+					int num = numberOfFiles[index];
+
+					for (int i = 0; i < num; ++i) {
+						FileData fd = ad.files[i];
+						int name = stream.readInt();
+						fd.nameHash = name;
+					}
+				}
+			}
+		} catch (IOException e) {
+			logger.error(String.valueOf(e));
 		}
 	}
 

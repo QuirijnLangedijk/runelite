@@ -24,90 +24,90 @@
  */
 package net.runelite.cache.definitions.loaders;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
 import net.runelite.cache.definitions.ScriptDefinition;
 import net.runelite.cache.io.InputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static net.runelite.cache.script.Opcodes.SCONST;
 import static net.runelite.cache.script.Opcodes.POP_INT;
 import static net.runelite.cache.script.Opcodes.POP_STRING;
 import static net.runelite.cache.script.Opcodes.RETURN;
 
-public class ScriptLoader
-{
-	public ScriptDefinition load(int id, byte[] b)
-	{
-		ScriptDefinition def = new ScriptDefinition();
-		def.setId(id);
-		InputStream in = new InputStream(b);
+public class ScriptLoader {
+    private static final Logger logger = LoggerFactory.getLogger(ScriptLoader.class);
 
-		in.setOffset(in.getLength() - 2);
-		int switchLength = in.readUnsignedShort();
+    public ScriptDefinition load(int id, byte[] b) {
+        ScriptDefinition def = new ScriptDefinition();
 
-		// 2 for switchLength + the switch data + 12 for the param/vars/stack data
-		int endIdx = in.getLength() - 2 - switchLength - 12;
-		in.setOffset(endIdx);
-		int numOpcodes = in.readInt();
-		int localIntCount = in.readUnsignedShort();
-		int localStringCount = in.readUnsignedShort();
-		int intStackCount = in.readUnsignedShort();
-		int stringStackCount = in.readUnsignedShort();
+        try (InputStream in = new InputStream(b)) {
+            def.setId(id);
 
-		int numSwitches = in.readUnsignedByte();
-		if (numSwitches > 0)
-		{
-			Map<Integer, Integer>[] switches = new Map[numSwitches];
-			def.setSwitches(switches);
+            in.setOffset(in.getLength() - 2);
+            int switchLength = in.readUnsignedShort();
 
-			for (int i = 0; i < numSwitches; ++i)
-			{
-				switches[i] = new HashMap<>();
+            // 2 for switchLength + the switch data + 12 for the param/vars/stack data
+            int endIdx = in.getLength() - 2 - switchLength - 12;
+            in.setOffset(endIdx);
+            int numOpcodes = in.readInt();
+            int localIntCount = in.readUnsignedShort();
+            int localStringCount = in.readUnsignedShort();
+            int intStackCount = in.readUnsignedShort();
+            int stringStackCount = in.readUnsignedShort();
 
-				int count = in.readUnsignedShort();
-				while (count-- > 0)
-				{
-					int key = in.readInt(); // int from stack is compared to this
-					int pcOffset = in.readInt(); // pc jumps by this
+            int numSwitches = in.readUnsignedByte();
+            if (numSwitches > 0) {
+                Map<Integer, Integer>[] switches = new Map[numSwitches];
+                def.setSwitches(switches);
 
-					switches[i].put(key, pcOffset);
-				}
-			}
-		}
+                for (int i = 0; i < numSwitches; ++i) {
+                    switches[i] = new HashMap<>();
 
-		def.setLocalIntCount(localIntCount);
-		def.setLocalStringCount(localStringCount);
-		def.setIntStackCount(intStackCount);
-		def.setStringStackCount(stringStackCount);
+                    int count = in.readUnsignedShort();
+                    while (count-- > 0) {
+                        int key = in.readInt(); // int from stack is compared to this
+                        int pcOffset = in.readInt(); // pc jumps by this
 
-		in.setOffset(0);
-		in.readStringOrNull();
+                        switches[i].put(key, pcOffset);
+                    }
+                }
+            }
 
-		int[] instructions = new int[numOpcodes];
-		int[] intOperands = new int[numOpcodes];
-		String[] stringOperands = new String[numOpcodes];
+            def.setLocalIntCount(localIntCount);
+            def.setLocalStringCount(localStringCount);
+            def.setIntStackCount(intStackCount);
+            def.setStringStackCount(stringStackCount);
 
-		def.setInstructions(instructions);
-		def.setIntOperands(intOperands);
-		def.setStringOperands(stringOperands);
+            in.setOffset(0);
+            in.readStringOrNull();
 
-		int opcode;
-		for (int i = 0; in.getOffset() < endIdx; instructions[i++] = opcode)
-		{
-			opcode = in.readUnsignedShort();
-			if (opcode == SCONST)
-			{
-				stringOperands[i] = in.readString();
-			}
-			else if (opcode < 100 && opcode != RETURN && opcode != POP_INT && opcode != POP_STRING)
-			{
-				intOperands[i] = in.readInt();
-			}
-			else
-			{
-				intOperands[i] = in.readUnsignedByte();
-			}
-		}
+            int[] instructions = new int[numOpcodes];
+            int[] intOperands = new int[numOpcodes];
+            String[] stringOperands = new String[numOpcodes];
 
-		return def;
-	}
+            def.setInstructions(instructions);
+            def.setIntOperands(intOperands);
+            def.setStringOperands(stringOperands);
+
+            int opcode;
+            for (int i = 0; in.getOffset() < endIdx; instructions[i++] = opcode) {
+                opcode = in.readUnsignedShort();
+                if (opcode == SCONST) {
+                    stringOperands[i] = in.readString();
+                } else if (opcode < 100 && opcode != RETURN && opcode != POP_INT && opcode != POP_STRING) {
+                    intOperands[i] = in.readInt();
+                } else {
+                    intOperands[i] = in.readUnsignedByte();
+                }
+            }
+        } catch (IOException e) {
+            logger.error(String.valueOf(e));
+        }
+
+        return def;
+    }
 }

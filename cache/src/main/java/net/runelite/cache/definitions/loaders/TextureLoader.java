@@ -29,6 +29,8 @@ import net.runelite.cache.io.InputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 public class TextureLoader
 {
 	private static final Logger logger = LoggerFactory.getLogger(TextureLoader.class);
@@ -36,49 +38,47 @@ public class TextureLoader
 	public TextureDefinition load(int id, byte[] b)
 	{
 		TextureDefinition def = new TextureDefinition();
-		InputStream is = new InputStream(b);
+		try (InputStream is = new InputStream(b)) {
 
-		def.field1777 = is.readUnsignedShort();
-		def.field1778 = is.readByte() != 0;
-		def.setId(id);
+			def.field1777 = is.readUnsignedShort();
+			def.field1778 = is.readByte() != 0;
+			def.setId(id);
 
-		int count = is.readUnsignedByte();
-		int[] files = new int[count];
+			int count = is.readUnsignedByte();
+			int[] files = new int[count];
 
-		for (int i = 0; i < count; ++i)
-			files[i] = is.readUnsignedShort();
+			for (int i = 0; i < count; ++i)
+				files[i] = is.readUnsignedShort();
 
-		def.setFileIds(files);
+			def.setFileIds(files);
 
-		if (count > 1)
-		{
-			def.field1780 = new int[count - 1];
+			if (count > 1) {
+				def.field1780 = new int[count - 1];
 
-			for (int var3 = 0; var3 < count - 1; ++var3)
-			{
-				def.field1780[var3] = is.readUnsignedByte();
+				for (int var3 = 0; var3 < count - 1; ++var3) {
+					def.field1780[var3] = is.readUnsignedByte();
+				}
 			}
-		}
 
-		if (count > 1)
-		{
-			def.field1781 = new int[count - 1];
+			if (count > 1) {
+				def.field1781 = new int[count - 1];
 
-			for (int var3 = 0; var3 < count - 1; ++var3)
-			{
-				def.field1781[var3] = is.readUnsignedByte();
+				for (int var3 = 0; var3 < count - 1; ++var3) {
+					def.field1781[var3] = is.readUnsignedByte();
+				}
 			}
+
+			def.field1786 = new int[count];
+
+			for (int var3 = 0; var3 < count; ++var3) {
+				def.field1786[var3] = is.readInt();
+			}
+
+			def.field1783 = is.readUnsignedByte();
+			def.field1782 = is.readUnsignedByte();
+		} catch (IOException e) {
+			logger.error(String.valueOf(e));
 		}
-
-		def.field1786 = new int[count];
-
-		for (int var3 = 0; var3 < count; ++var3)
-		{
-			def.field1786[var3] = is.readInt();
-		}
-
-		def.field1783 = is.readUnsignedByte();
-		def.field1782 = is.readUnsignedByte();
 
 		return def;
 	}

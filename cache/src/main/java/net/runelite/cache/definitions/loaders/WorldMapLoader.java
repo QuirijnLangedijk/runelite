@@ -24,6 +24,7 @@
  */
 package net.runelite.cache.definitions.loaders;
 
+import java.io.IOException;
 import java.util.LinkedList;
 import net.runelite.cache.definitions.WorldMapDefinition;
 import net.runelite.cache.definitions.WorldMapType0;
@@ -33,43 +34,46 @@ import net.runelite.cache.definitions.WorldMapType3;
 import net.runelite.cache.definitions.WorldMapTypeBase;
 import net.runelite.cache.io.InputStream;
 import net.runelite.cache.region.Position;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WorldMapLoader
 {
+	private static final Logger logger = LoggerFactory.getLogger(WorldMapLoader.class);
+
 	public WorldMapDefinition load(byte[] b, int fileId)
 	{
 		WorldMapDefinition def = new WorldMapDefinition();
-		InputStream in = new InputStream(b);
+		try (InputStream in = new InputStream(b)) {
 
-		def.fileId = fileId;
-		def.safeName = in.readString();
-		def.name = in.readString();
+			def.fileId = fileId;
+			def.safeName = in.readString();
+			def.name = in.readString();
 
-		int packedPos = in.readInt();
-		if (packedPos == -1)
-		{
-			def.position = new Position(-1, -1, -1);
+			int packedPos = in.readInt();
+			if (packedPos == -1) {
+				def.position = new Position(-1, -1, -1);
+			} else {
+				int y = packedPos >> 28 & 3;
+				int x = packedPos >> 14 & 16383;
+				int z = packedPos & 16383;
+				def.position = new Position(x, y, z);
+			}
+
+			def.field450 = in.readInt();
+			in.readUnsignedByte();
+			def.isSurface = in.readUnsignedByte() == 1;
+			def.defaultZoom = in.readUnsignedByte();
+			int var3 = in.readUnsignedByte();
+			def.regionList = new LinkedList();
+
+			for (int var4 = 0; var4 < var3; ++var4) {
+				def.regionList.add(this.loadType(in));
+			}
+
+		} catch (IOException e) {
+			logger.error(String.valueOf(e));
 		}
-		else
-		{
-			int y = packedPos >> 28 & 3;
-			int x = packedPos >> 14 & 16383;
-			int z = packedPos & 16383;
-			def.position = new Position(x, y, z);
-		}
-
-		def.field450 = in.readInt();
-		in.readUnsignedByte();
-		def.isSurface = in.readUnsignedByte() == 1;
-		def.defaultZoom = in.readUnsignedByte();
-		int var3 = in.readUnsignedByte();
-		def.regionList = new LinkedList();
-
-		for (int var4 = 0; var4 < var3; ++var4)
-		{
-			def.regionList.add(this.loadType(in));
-		}
-
 		return def;
 	}
 

@@ -29,6 +29,8 @@ import net.runelite.cache.io.InputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 public class UnderlayLoader
 {
 	private static final Logger logger = LoggerFactory.getLogger(UnderlayLoader.class);
@@ -36,26 +38,26 @@ public class UnderlayLoader
 	public UnderlayDefinition load(int id, byte[] b)
 	{
 		UnderlayDefinition def = new UnderlayDefinition();
-		InputStream is = new InputStream(b);
 
-		def.setId(id);
+		try(InputStream is = new InputStream(b)) {
+			def.setId(id);
 
-		for (;;)
-		{
-			int opcode = is.readUnsignedByte();
-			if (opcode == 0)
-			{
-				break;
+			for (; ; ) {
+				int opcode = is.readUnsignedByte();
+				if (opcode == 0) {
+					break;
+				}
+
+				if (opcode == 1) {
+					int color = is.read24BitInt();
+					def.setColor(color);
+				}
 			}
 
-			if (opcode == 1)
-			{
-				int color = is.read24BitInt();
-				def.setColor(color);
-			}
+			def.calculateHsl();
+		} catch (IOException e) {
+			logger.error(String.valueOf(e));
 		}
-
-		def.calculateHsl();
 
 		return def;
 	}
