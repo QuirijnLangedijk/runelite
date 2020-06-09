@@ -447,8 +447,14 @@ class Skybox
 			}
 		}
 
-		// Convert back to int range values, and bounds check while we are at it
-		byte ay = (byte) Math.min(Math.max(Math.round(ty / t * 255.d), 0), 255);
+		byte ay;
+		if (t != 0) {
+			// Convert back to int range values, and bounds check while we are at it
+			ay = (byte) Math.min(Math.max(Math.round(ty / t * 255.d), 0), 255);
+		} else {
+			ay = (byte) Math.min(Math.max(Math.round(ty / 1 * 255.d), 0), 255);
+		}
+
 		byte aco = (byte) Math.min(Math.max(Math.round(tco * 128.d / t), -128), 127);
 		byte acg = (byte) Math.min(Math.max(Math.round(tcg * 128.d / t), -128), 127);
 
