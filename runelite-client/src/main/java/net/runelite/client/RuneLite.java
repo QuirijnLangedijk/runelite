@@ -276,7 +276,7 @@ public class RuneLite
 		{
 			log.error("Failure during startup", e);
 			SwingUtilities.invokeLater(() ->
-				new FatalErrorDialog("RuneLite has encountered an unexpected error during startup.")
+				new FatalErrorDialog("RuneLite has encountered an unexpected error during startup!")
 					.open());
 		}
 		finally
