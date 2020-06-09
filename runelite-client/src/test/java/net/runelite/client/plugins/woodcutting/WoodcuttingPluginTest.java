@@ -99,6 +99,17 @@ public class WoodcuttingPluginTest
 	}
 
 	@Test
+	public void testMapleLogs()
+	{
+		// Arrange
+		ChatMessage chatMessage = new ChatMessage(null, ChatMessageType.SPAM, "", "You get some maple logs.", "", 0);
+		// Act
+		woodcuttingPlugin.onChatMessage(chatMessage);
+		// Assert
+		assertNotNull(woodcuttingPlugin.getSession());
+	}
+
+	@Test
 	public void testArcticLogs()
 	{
 		ChatMessage chatMessage = new ChatMessage(null, ChatMessageType.SPAM, "", "You get an arctic log.", "", 0);

@@ -393,4 +393,25 @@ public class CombatLevelPluginTest
 		// test prayer
 		assertEquals(8, prayerNeed);
 	}
+
+	@Test
+	public void testPlayerMaxedStats()
+	{
+		// Arrange
+		int attackLevel = 99;
+		int strengthLevel = 99;
+		int defenceLevel = 99;
+		int hitpointsLevel = 99;
+		int magicLevel = 99;
+		int rangeLevel = 99;
+		int prayerLevel = 99;
+
+		// Act
+		// Calculate the combat level of a maxed player
+		int combatLevel = Experience.getCombatLevel(attackLevel, strengthLevel, defenceLevel, hitpointsLevel,
+				magicLevel, rangeLevel, prayerLevel);
+
+		// Assert
+		assertEquals(126, combatLevel);
+	}
 }

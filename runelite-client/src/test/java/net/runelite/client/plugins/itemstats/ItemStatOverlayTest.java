@@ -29,10 +29,8 @@ import com.google.inject.Inject;
 import com.google.inject.testing.fieldbinder.Bind;
 import com.google.inject.testing.fieldbinder.BoundFieldModule;
 import java.awt.Color;
-import net.runelite.api.Client;
-import net.runelite.api.EquipmentInventorySlot;
-import net.runelite.api.InventoryID;
-import net.runelite.api.ItemContainer;
+
+import net.runelite.api.*;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.util.Text;
 import net.runelite.http.api.item.ItemEquipmentStats;
@@ -89,6 +87,19 @@ public class ItemStatOverlayTest
 			.arange(110)
 			.aspeed(7)
 			.build());
+	// Arrange
+	private static final ItemStats SCYTHE_OF_VITUR_CHARGED = new ItemStats(false, true, 3.175, 1,
+		ItemEquipmentStats.builder()
+			.slot(EquipmentInventorySlot.WEAPON.getSlotIdx())
+			.astab(70)
+			.aslash(110)
+			.acrush(30)
+			.dstab(-2)
+			.dslash(8)
+			.dcrush(10)
+			.str(75)
+			.aspeed(5)
+			.build());
 
 	@Inject
 	ItemStatOverlay overlay;
@@ -121,6 +132,24 @@ public class ItemStatOverlayTest
 		assertEquals(ItemStatOverlay.UNARMED.getEquipment().getAspeed(), KATANA.getEquipment().getAspeed());
 		assertEquals(-1, BLOWPIPE.getEquipment().getAspeed() - ItemStatOverlay.UNARMED.getEquipment().getAspeed());
 		assertEquals(3, HEAVY_BALLISTA.getEquipment().getAspeed() - ItemStatOverlay.UNARMED.getEquipment().getAspeed());
+	}
+
+	@Test()
+	public void testWrongScytheStatBonus()
+	{
+		// Empty equipment (fully unarmed)
+		final ItemContainer equipment = mock(ItemContainer.class);
+		when(client.getItemContainer(InventoryID.EQUIPMENT)).thenReturn(equipment);
+
+		// Act
+		String tooltip = overlay.buildStatBonusString(SCYTHE_OF_VITUR_CHARGED);
+		String sanitizedTooltip = Text.sanitizeMultilineText(tooltip);
+
+		// Assert
+		// Wrong attack values of the Scythe of Vitur (Charged)
+		assertFalse(sanitizedTooltip.contains("Stab: +73450"));
+		assertFalse(sanitizedTooltip.contains("Slash: +113450"));
+		assertFalse(sanitizedTooltip.contains("Crush: +9999"));
 	}
 
 	@Test

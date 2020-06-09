@@ -89,6 +89,41 @@ public class XpTrackerPluginTest
 	}
 
 	@Test
+	public void testXpGainCalculations()
+	{
+		// Arrange
+		// Log character in
+		GameStateChanged gameStateChanged = new GameStateChanged();
+		gameStateChanged.setGameState(GameState.LOGGING_IN);
+
+		// Flag initialization of tracker
+		xpTrackerPlugin.onGameStateChanged(gameStateChanged);
+		when(client.getSkillExperience(Skill.RUNECRAFT)).thenReturn(39);
+		xpTrackerPlugin.onGameTick(new GameTick());
+
+		// Act
+		// Gain runecrafting experience (100 - 39 = 61, so 61 exp gained)
+		StatChanged statChanged = new StatChanged(
+				Skill.RUNECRAFT,
+				100,
+				2,
+				2
+		);
+		xpTrackerPlugin.onStatChanged(statChanged);
+
+		XpStateSingle skillState = xpTrackerPlugin.getSkillState(Skill.RUNECRAFT);
+
+		// Assert
+		assertEquals(39, skillState.getStartXp());
+		assertEquals(61, skillState.getXpGained());
+		assertEquals(100, skillState.getCurrentXp());
+
+		// Formula: (int) ((1.0 / (getTimeElapsedInSeconds() / 3600.0)) * value)
+		// Calculation of xp/hour = ((1.0 / (60 / 3600.0)) * 61);
+		assertEquals(3660, skillState.getXpHr());
+	}
+
+	@Test
 	public void testOfflineXp()
 	{
 		GameStateChanged gameStateChanged = new GameStateChanged();
