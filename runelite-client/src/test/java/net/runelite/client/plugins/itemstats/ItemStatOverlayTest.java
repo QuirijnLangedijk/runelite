@@ -62,6 +62,7 @@ public class ItemStatOverlayTest
 			.str(75)
 			.aspeed(4)
 			.build());
+
 	private static final ItemStats KATANA = new ItemStats(false, true, 0, 8,
 		ItemEquipmentStats.builder()
 			.slot(EquipmentInventorySlot.WEAPON.getSlotIdx())
@@ -74,6 +75,7 @@ public class ItemStatOverlayTest
 			.str(40)
 			.aspeed(4)
 			.build());
+
 	private static final ItemStats BLOWPIPE = new ItemStats(false, true, 0, 0,
 		ItemEquipmentStats.builder()
 			.slot(EquipmentInventorySlot.WEAPON.getSlotIdx())
@@ -81,12 +83,14 @@ public class ItemStatOverlayTest
 			.rstr(40)
 			.aspeed(3)
 			.build());
+
 	private static final ItemStats HEAVY_BALLISTA = new ItemStats(false, true, 4, 8,
 		ItemEquipmentStats.builder()
 			.slot(EquipmentInventorySlot.WEAPON.getSlotIdx())
 			.arange(110)
 			.aspeed(7)
 			.build());
+
 	// Arrange
 	private static final ItemStats SCYTHE_OF_VITUR_CHARGED = new ItemStats(false, true, 3.175, 1,
 		ItemEquipmentStats.builder()

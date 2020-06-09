@@ -26,6 +26,8 @@ package net.runelite.client.plugins.combatlevel;
 
 import net.runelite.api.Experience;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.Test;
 
 public class CombatLevelPluginTest
@@ -394,10 +396,11 @@ public class CombatLevelPluginTest
 		assertEquals(8, prayerNeed);
 	}
 
-	@Test
+	@Test(expected = IllegalArgumentException.class)
 	public void testPlayerMaxedStats()
 	{
 		// Arrange
+		final int MAX_VANILLA_LEVEL = 126;
 		int attackLevel = 99;
 		int strengthLevel = 99;
 		int defenceLevel = 99;
@@ -405,13 +408,22 @@ public class CombatLevelPluginTest
 		int magicLevel = 99;
 		int rangeLevel = 99;
 		int prayerLevel = 99;
+		String expectedError = "Values are below 0";
 
 		// Act
 		// Calculate the combat level of a maxed player
-		int combatLevel = Experience.getCombatLevel(attackLevel, strengthLevel, defenceLevel, hitpointsLevel,
+		int maxVanillaCombatLevel = Experience.getCombatLevel(attackLevel, strengthLevel, defenceLevel, hitpointsLevel,
+				magicLevel, rangeLevel, prayerLevel);
+		int aboveVanillaCombatLevel = Experience.getCombatLevel(2*attackLevel, strengthLevel, defenceLevel, hitpointsLevel,
+				magicLevel, rangeLevel, prayerLevel);
+		int belowVanillaCombatLevel = Experience.getCombatLevel(attackLevel / 2, strengthLevel, defenceLevel, hitpointsLevel,
+				magicLevel, rangeLevel, prayerLevel);
+		int invalid = Experience.getCombatLevel(-1, strengthLevel, defenceLevel, hitpointsLevel,
 				magicLevel, rangeLevel, prayerLevel);
 
 		// Assert
-		assertEquals(126, combatLevel);
+		assertEquals(MAX_VANILLA_LEVEL, maxVanillaCombatLevel);
+		assertTrue(aboveVanillaCombatLevel > MAX_VANILLA_LEVEL);
+		assertTrue(belowVanillaCombatLevel < MAX_VANILLA_LEVEL);
 	}
 }
