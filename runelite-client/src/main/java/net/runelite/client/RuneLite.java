@@ -229,8 +229,7 @@ public class RuneLite
 		SplashScreen.init();
 		SplashScreen.stage(0, "Retrieving client", "");
 
-		try
-		{
+		try {
 			final ClientLoader clientLoader = new ClientLoader(options.valueOf(updateMode));
 
 			new Thread(() ->
@@ -241,16 +240,14 @@ public class RuneLite
 
 			final boolean developerMode = options.has("developer-mode") && RuneLiteProperties.getLauncherVersion() == null;
 
-			if (developerMode)
-			{
+			if (developerMode) {
 				boolean assertions = false;
 				assert assertions = true;
-				if (!assertions)
-				{
+				if (!assertions) {
 					SwingUtilities.invokeLater(() ->
-						new FatalErrorDialog("Developers should enable assertions; Add `-ea` to your JVM arguments`")
-							.addBuildingGuide()
-							.open());
+							new FatalErrorDialog("Developers should enable assertions; Add `-ea` to your JVM arguments`")
+									.addBuildingGuide()
+									.open());
 					return;
 				}
 			}
@@ -260,10 +257,10 @@ public class RuneLite
 			final long start = System.currentTimeMillis();
 
 			injector = Guice.createInjector(new RuneLiteModule(
-				clientLoader,
-				developerMode,
-				options.valueOf(sessionfile),
-				options.valueOf(configfile)));
+					clientLoader,
+					developerMode,
+					options.valueOf(sessionfile),
+					options.valueOf(configfile)));
 
 			injector.getInstance(RuneLite.class).start();
 
@@ -271,17 +268,6 @@ public class RuneLite
 			final RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
 			final long uptime = rb.getUptime();
 			log.info("Client initialization took {}ms. Uptime: {}ms", end - start, uptime);
-		}
-		catch (Exception e)
-		{
-			log.error("Failure during startup", e);
-			SwingUtilities.invokeLater(() ->
-				new FatalErrorDialog("RuneLite has encountered an unexpected error during startup!")
-					.open());
-		}
-		finally
-		{
-			SplashScreen.stop();
 		}
 	}
 
