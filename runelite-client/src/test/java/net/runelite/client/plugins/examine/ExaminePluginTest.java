@@ -99,6 +99,27 @@ public class ExaminePluginTest
 	}
 
 	@Test
+	public void testItemOnGround()
+	{
+		// Arrange
+		when(client.getWidget(anyInt(), anyInt())).thenReturn(mock(Widget.class));
+		when(itemManager.getItemComposition(anyInt())).thenReturn(mock(ItemComposition.class));
+
+		MenuOptionClicked menuOptionClicked = new MenuOptionClicked();
+		menuOptionClicked.setMenuOption("Examine");
+		menuOptionClicked.setMenuAction(MenuAction.EXAMINE_ITEM_GROUND);
+		menuOptionClicked.setId(ItemID.KNIFE);
+		// Act
+		examinePlugin.onMenuOptionClicked(menuOptionClicked);
+
+		ChatMessage chatMessage = new ChatMessage(null, ChatMessageType.ITEM_EXAMINE, "", "Knife", "", 0);
+		examinePlugin.onChatMessage(chatMessage);
+
+		// Assert
+		verify(examineClient).submitItem(anyInt(), anyString());
+	}
+
+	@Test
 	public void testLargeStacks()
 	{
 		when(client.getWidget(anyInt(), anyInt())).thenReturn(mock(Widget.class));
