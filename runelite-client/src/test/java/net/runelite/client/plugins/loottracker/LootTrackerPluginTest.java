@@ -142,6 +142,22 @@ public class LootTrackerPluginTest
 	}
 
 	@Test
+	public void testPickPocketMultipleNpcs()
+	{
+		ChatMessage chatMessageMan = new ChatMessage(null, ChatMessageType.SPAM, "", "You pick the man's pocket.", "", 0);
+		lootTrackerPlugin.onChatMessage(chatMessageMan);
+
+		assertEquals("Man", lootTrackerPlugin.eventType);
+		assertEquals(LootRecordType.PICKPOCKET, lootTrackerPlugin.lootRecordType);
+
+		ChatMessage chatMessageWoman = new ChatMessage(null, ChatMessageType.SPAM, "", "You pick the woman's pocket.", "", 0);
+		lootTrackerPlugin.onChatMessage(chatMessageWoman);
+
+		assertEquals("Woman", lootTrackerPlugin.eventType);
+		assertEquals(LootRecordType.PICKPOCKET, lootTrackerPlugin.lootRecordType);
+	}
+
+	@Test
 	public void testFirstClue()
 	{
 		ChatMessage chatMessage = new ChatMessage(null, ChatMessageType.GAMEMESSAGE, "", "You have completed 1 master Treasure Trail.", "", 0);
