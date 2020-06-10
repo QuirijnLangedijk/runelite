@@ -229,20 +229,22 @@ public class ScreenshotPluginTest
 	@Test
 	public void testFarminglevel99()
 	{
+		// Arrange
 		Widget levelChild = mock(Widget.class);
 		when(client.getWidget(eq(LEVEL_UP_LEVEL))).thenReturn(levelChild);
-
 		when(levelChild.getText()).thenReturn("Your Farming level is now 99.");
-
-		assertEquals("Farming(99)", screenshotPlugin.parseLevelUpWidget(LEVEL_UP_LEVEL));
 
 		WidgetLoaded event = new WidgetLoaded();
 		event.setGroupId(LEVEL_UP_GROUP_ID);
+
+		// Act
 		screenshotPlugin.onWidgetLoaded(event);
 
 		GameTick tick = new GameTick();
 		screenshotPlugin.onGameTick(tick);
 
+		// Assert
+		assertEquals("Farming(99)", screenshotPlugin.parseLevelUpWidget(LEVEL_UP_LEVEL));
 		verify(drawManager).requestNextFrameListener(any(Consumer.class));
 	}
 
