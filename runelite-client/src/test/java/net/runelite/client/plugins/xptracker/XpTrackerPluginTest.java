@@ -27,7 +27,9 @@ package net.runelite.client.plugins.xptracker;
 import com.google.inject.Guice;
 import com.google.inject.testing.fieldbinder.Bind;
 import com.google.inject.testing.fieldbinder.BoundFieldModule;
+
 import javax.inject.Inject;
+
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.Player;
@@ -39,66 +41,105 @@ import net.runelite.client.game.NPCManager;
 import net.runelite.client.game.SkillIconManager;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.overlay.OverlayManager;
+
 import static org.junit.Assert.assertEquals;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class XpTrackerPluginTest
-{
-	@Inject
-	private XpTrackerPlugin xpTrackerPlugin;
+public class XpTrackerPluginTest {
+    @Inject
+    private XpTrackerPlugin xpTrackerPlugin;
 
-	@Mock
-	@Bind
-	private ClientToolbar clientToolbar;
+    @Mock
+    @Bind
+    private ClientToolbar clientToolbar;
 
-	@Mock
-	@Bind
-	private Client client;
+    @Mock
+    @Bind
+    private Client client;
 
-	@Mock
-	@Bind
-	private SkillIconManager skillIconManager;
+    @Mock
+    @Bind
+    private SkillIconManager skillIconManager;
 
-	@Mock
-	@Bind
-	private XpTrackerConfig xpTrackerConfig;
+    @Mock
+    @Bind
+    private XpTrackerConfig xpTrackerConfig;
 
-	@Mock
-	@Bind
-	private NPCManager npcManager;
+    @Mock
+    @Bind
+    private NPCManager npcManager;
 
-	@Mock
-	@Bind
-	private OverlayManager overlayManager;
+    @Mock
+    @Bind
+    private OverlayManager overlayManager;
 
-	@Before
-	public void before()
-	{
-		Guice.createInjector(BoundFieldModule.of(this)).injectMembers(this);
+    @Before
+    public void before() {
+        Guice.createInjector(BoundFieldModule.of(this)).injectMembers(this);
 
-		when(client.getLocalPlayer()).thenReturn(mock(Player.class));
+        when(client.getLocalPlayer()).thenReturn(mock(Player.class));
 
-		xpTrackerPlugin.setXpPanel(mock(XpPanel.class));
-	}
+        xpTrackerPlugin.setXpPanel(mock(XpPanel.class));
+    }
 
-	@Test
-	public void testXpGainCalculations()
-	{
+    @Test()
+    public void testXpGainCalculations() {
+        // Arrange
+        // Log character in
+        final int START_XP = 39;
+        GameStateChanged gameStateChanged = new GameStateChanged();
+        gameStateChanged.setGameState(GameState.LOGGING_IN);
+
+        // Flag initialization of tracker
+        xpTrackerPlugin.onGameStateChanged(gameStateChanged);
+        when(client.getSkillExperience(Skill.RUNECRAFT)).thenReturn(START_XP);
+
+        xpTrackerPlugin.onGameTick(new GameTick());
+
+        // Act
+        // Gain runecrafting experience (100 - 39 = 61, so 61 exp gained)
+        StatChanged statChanged = new StatChanged(
+                Skill.RUNECRAFT,
+                100,
+                2,
+                2
+        );
+        xpTrackerPlugin.onStatChanged(statChanged);
+
+        XpStateSingle skillState = xpTrackerPlugin.getSkillState(Skill.RUNECRAFT);
+
+        // Assert
+        assertEquals(START_XP, skillState.getStartXp());
+        assertEquals(61, skillState.getXpGained());
+        assertEquals(100, skillState.getCurrentXp());
+
+        // Formula: (int) ((1.0 / (getTimeElapsedInSeconds() / 3600.0)) * value)
+        // Calculation of xp/hour = ((1.0 / (60 / 3600.0)) * 61);
+        assertEquals(3660, skillState.getXpHr());
+    }
+
+	@Test(expected = AssertionError.class)
+	public void testXpGainCalculationsWrongStats() {
 		// Arrange
 		// Log character in
+		final int START_XP = 38;
 		GameStateChanged gameStateChanged = new GameStateChanged();
 		gameStateChanged.setGameState(GameState.LOGGING_IN);
 
 		// Flag initialization of tracker
 		xpTrackerPlugin.onGameStateChanged(gameStateChanged);
-		when(client.getSkillExperience(Skill.RUNECRAFT)).thenReturn(39);
+		when(client.getSkillExperience(Skill.RUNECRAFT)).thenReturn(-1);
+
 		xpTrackerPlugin.onGameTick(new GameTick());
 
 		// Act
@@ -114,45 +155,45 @@ public class XpTrackerPluginTest
 		XpStateSingle skillState = xpTrackerPlugin.getSkillState(Skill.RUNECRAFT);
 
 		// Assert
-		assertEquals(39, skillState.getStartXp());
-		assertEquals(61, skillState.getXpGained());
-		assertEquals(100, skillState.getCurrentXp());
+		assertEquals(START_XP, skillState.getStartXp());
+		assertEquals(60, skillState.getXpGained());
+		assertEquals(101, skillState.getCurrentXp());
 
 		// Formula: (int) ((1.0 / (getTimeElapsedInSeconds() / 3600.0)) * value)
 		// Calculation of xp/hour = ((1.0 / (60 / 3600.0)) * 61);
-		assertEquals(3660, skillState.getXpHr());
+		assertEquals(3661, skillState.getXpHr());
 	}
 
-	@Test
-	public void testOfflineXp()
-	{
-		GameStateChanged gameStateChanged = new GameStateChanged();
-		gameStateChanged.setGameState(GameState.LOGGING_IN);
 
-		// Flag initialization of tracker
-		xpTrackerPlugin.onGameStateChanged(gameStateChanged);
-		when(client.getSkillExperience(Skill.ATTACK)).thenReturn(42);
-		// Initialize tracker
-		xpTrackerPlugin.onGameTick(new GameTick());
+    @Test
+    public void testOfflineXp() {
+        GameStateChanged gameStateChanged = new GameStateChanged();
+        gameStateChanged.setGameState(GameState.LOGGING_IN);
 
-		// Gain attack xp
-		StatChanged statChanged = new StatChanged(
-			Skill.ATTACK,
-			100,
-			2,
-			2
-		);
-		xpTrackerPlugin.onStatChanged(statChanged);
+        // Flag initialization of tracker
+        xpTrackerPlugin.onGameStateChanged(gameStateChanged);
+        when(client.getSkillExperience(Skill.ATTACK)).thenReturn(42);
+        // Initialize tracker
+        xpTrackerPlugin.onGameTick(new GameTick());
 
-		// Offline gain
-		when(client.getSkillExperience(Skill.ATTACK)).thenReturn(42000);
-		// Flag initialization of tracker
-		xpTrackerPlugin.onGameStateChanged(gameStateChanged);
-		// Initialize tracker
-		xpTrackerPlugin.onGameTick(new GameTick());
+        // Gain attack xp
+        StatChanged statChanged = new StatChanged(
+                Skill.ATTACK,
+                100,
+                2,
+                2
+        );
+        xpTrackerPlugin.onStatChanged(statChanged);
 
-		// Start at 42 xp, gain of 58 xp, offline gain of 41900 xp - offset start XP: 42 + 41900
-		XpStateSingle skillState = xpTrackerPlugin.getSkillState(Skill.ATTACK);
-		assertEquals(41942, skillState.getStartXp());
-	}
+        // Offline gain
+        when(client.getSkillExperience(Skill.ATTACK)).thenReturn(42000);
+        // Flag initialization of tracker
+        xpTrackerPlugin.onGameStateChanged(gameStateChanged);
+        // Initialize tracker
+        xpTrackerPlugin.onGameTick(new GameTick());
+
+        // Start at 42 xp, gain of 58 xp, offline gain of 41900 xp - offset start XP: 42 + 41900
+        XpStateSingle skillState = xpTrackerPlugin.getSkillState(Skill.ATTACK);
+        assertEquals(41942, skillState.getStartXp());
+    }
 }

@@ -109,6 +109,7 @@ public class ExaminePluginTest
 		menuOptionClicked.setMenuOption("Examine");
 		menuOptionClicked.setMenuAction(MenuAction.EXAMINE_ITEM_GROUND);
 		menuOptionClicked.setId(ItemID.KNIFE);
+
 		// Act
 		examinePlugin.onMenuOptionClicked(menuOptionClicked);
 

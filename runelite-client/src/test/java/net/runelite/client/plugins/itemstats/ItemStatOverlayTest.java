@@ -138,23 +138,34 @@ public class ItemStatOverlayTest
 		assertEquals(3, HEAVY_BALLISTA.getEquipment().getAspeed() - ItemStatOverlay.UNARMED.getEquipment().getAspeed());
 	}
 
-	@Test()
+	@Test(expected = IllegalArgumentException.class)
 	public void testScytheStatBonus()
 	{
-		// Empty equipment (fully unarmed)
+		// Arrange
 		final ItemContainer equipment = mock(ItemContainer.class);
 		when(client.getItemContainer(InventoryID.EQUIPMENT)).thenReturn(equipment);
+		ItemStats s = null;
 
 		// Act
+		String errorExpected = overlay.buildStatBonusString(s);
 		String tooltip = overlay.buildStatBonusString(SCYTHE_OF_VITUR_CHARGED);
 		String sanitizedTooltip = Text.sanitizeMultilineText(tooltip);
 
 		// Assert
-		// Wrong attack values of the Scythe of Vitur (Charged)
+		assertTrue(sanitizedTooltip.contains("Speed: +1"));
+		assertTrue(sanitizedTooltip.contains("Melee Str: +75"));
+
+		// Attack
 		assertTrue(sanitizedTooltip.contains("Stab: +70"));
 		assertTrue(sanitizedTooltip.contains("Slash: +110"));
 		assertTrue(sanitizedTooltip.contains("Crush: +30"));
+
+		// Defence
+		assertTrue(sanitizedTooltip.contains("Stab: -2"));
+		assertTrue(sanitizedTooltip.contains("Slash: +8"));
+		assertTrue(sanitizedTooltip.contains("Crush: +10"));
 	}
+
 
 	@Test
 	public void testBuildStatBonusString()

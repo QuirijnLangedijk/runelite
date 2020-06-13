@@ -34,11 +34,13 @@ import net.runelite.api.Client;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.client.Notifier;
 import net.runelite.client.ui.overlay.OverlayManager;
-import static org.junit.Assert.assertNotNull;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -107,8 +109,21 @@ public class WoodcuttingPluginTest
 		// Act
 		woodcuttingPlugin.onChatMessage(chatMessage);
 
+
 		// Assert
 		assertNotNull(woodcuttingPlugin.getSession());
+	}
+
+	@Test
+	public void testMapleLogsError() {
+		// Arrange
+		ChatMessage chatMessageType = new ChatMessage(null, ChatMessageType.MODCHAT, "", "You get some maple logs.", "", 0);
+
+		// Act
+		woodcuttingPlugin.onChatMessage(chatMessageType);
+
+		// Assert
+		assertNull(woodcuttingPlugin.getSession());
 	}
 
 	@Test
