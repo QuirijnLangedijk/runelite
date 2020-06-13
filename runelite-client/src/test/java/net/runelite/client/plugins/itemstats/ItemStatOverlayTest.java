@@ -139,7 +139,7 @@ public class ItemStatOverlayTest
 	}
 
 	@Test()
-	public void testWrongScytheStatBonus()
+	public void testScytheStatBonus()
 	{
 		// Empty equipment (fully unarmed)
 		final ItemContainer equipment = mock(ItemContainer.class);
@@ -151,9 +151,9 @@ public class ItemStatOverlayTest
 
 		// Assert
 		// Wrong attack values of the Scythe of Vitur (Charged)
-		assertFalse(sanitizedTooltip.contains("Stab: +73450"));
-		assertFalse(sanitizedTooltip.contains("Slash: +113450"));
-		assertFalse(sanitizedTooltip.contains("Crush: +9999"));
+		assertTrue(sanitizedTooltip.contains("Stab: +70"));
+		assertTrue(sanitizedTooltip.contains("Slash: +110"));
+		assertTrue(sanitizedTooltip.contains("Crush: +30"));
 	}
 
 	@Test
