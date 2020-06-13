@@ -25,6 +25,7 @@
 package net.runelite.cache.definitions;
 
 import lombok.Data;
+import net.runelite.cache.hslDefinition;
 
 @Data
 public class UnderlayDefinition
@@ -39,89 +40,17 @@ public class UnderlayDefinition
 
 	public void calculateHsl()
 	{
-		int var1 = color;
-		double var2 = (double) (var1 >> 16 & 255) / 256.0D;
-		double var4 = (double) (var1 >> 8 & 255) / 256.0D;
-		double var6 = (double) (var1 & 255) / 256.0D;
-		double var8 = var2;
-		if (var4 < var2)
-		{
-			var8 = var4;
-		}
+		hslDefinition hsl = hslDefinition.calculateHsl(color);
+		this.saturation = hsl.saturation;
+		this.lightness = hsl.lightness;
 
-		if (var6 < var8)
+		if (hsl.var16 > 0.5D)
 		{
-			var8 = var6;
-		}
-
-		double var10 = var2;
-		if (var4 > var2)
-		{
-			var10 = var4;
-		}
-
-		if (var6 > var10)
-		{
-			var10 = var6;
-		}
-
-		double var12 = 0.0D;
-		double var14 = 0.0D;
-		double var16 = (var10 + var8) / 2.0D;
-		if (var8 != var10)
-		{
-			if (var16 < 0.5D)
-			{
-				var14 = (var10 - var8) / (var8 + var10);
-			}
-
-			if (var16 >= 0.5D)
-			{
-				var14 = (var10 - var8) / (2.0D - var10 - var8);
-			}
-
-			if (var2 == var10)
-			{
-				var12 = (var4 - var6) / (var10 - var8);
-			}
-			else if (var10 == var4)
-			{
-				var12 = 2.0D + (var6 - var2) / (var10 - var8);
-			}
-			else if (var10 == var6)
-			{
-				var12 = 4.0D + (var2 - var4) / (var10 - var8);
-			}
-		}
-
-		var12 /= 6.0D;
-		this.saturation = (int) (var14 * 256.0D);
-		this.lightness = (int) (var16 * 256.0D);
-		if (this.saturation < 0)
-		{
-			this.saturation = 0;
-		}
-		else if (this.saturation > 255)
-		{
-			this.saturation = 255;
-		}
-
-		if (this.lightness < 0)
-		{
-			this.lightness = 0;
-		}
-		else if (this.lightness > 255)
-		{
-			this.lightness = 255;
-		}
-
-		if (var16 > 0.5D)
-		{
-			this.hueMultiplier = (int) (var14 * (1.0D - var16) * 512.0D);
+			this.hueMultiplier = (int) (hsl.var14 * (1.0D - hsl.var16) * 512.0D);
 		}
 		else
 		{
-			this.hueMultiplier = (int) (var14 * var16 * 512.0D);
+			this.hueMultiplier = (int) (hsl.var14 * hsl.var16 * 512.0D);
 		}
 
 		if (this.hueMultiplier < 1)
@@ -129,6 +58,6 @@ public class UnderlayDefinition
 			this.hueMultiplier = 1;
 		}
 
-		this.hue = (int) ((double) this.hueMultiplier * var12);
+		this.hue = (int) ((double) this.hueMultiplier * hsl.var12);
 	}
 }
