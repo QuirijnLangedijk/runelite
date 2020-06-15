@@ -242,7 +242,7 @@ public class AlchemyRoom extends MTARoom
 				String item = message.replace(YOU_FOUND, "").trim();
 				AlchemyItem alchemyItem = AlchemyItem.find(item);
 				Cupboard clicked = getClicked();
-				if (clicked.alchemyItem != alchemyItem)
+				if (alchemyItem != null && clicked.alchemyItem != alchemyItem)
 				{
 					fill(clicked, alchemyItem);
 				}

@@ -260,7 +260,10 @@ public class TelekineticRoom extends MTARoom
 
 		Direction next = moves.pop();
 		WorldArea areaNext = getIndicatorLine(next);
-		WorldPoint nearestNext = nearest(areaNext, current);
+		WorldPoint nearestNext = null;
+		if (areaNext != null) {
+			nearestNext = nearest(areaNext, current);
+		}
 
 		if (moves.isEmpty())
 		{
@@ -272,9 +275,15 @@ public class TelekineticRoom extends MTARoom
 		Direction after = moves.peek();
 		moves.push(next);
 		WorldArea areaAfter = getIndicatorLine(after);
-		WorldPoint nearestAfter = nearest(areaAfter, nearestNext);
-
-		return nearest(areaNext, nearestAfter);
+		WorldPoint nearestAfter = null;
+		if (areaAfter != null) {
+			nearestAfter = nearest(areaAfter, nearestNext);
+		}
+		if(areaNext != null && nearestAfter != null) {
+			return nearest(areaNext, nearestAfter);
+		} else {
+			return null;
+		}
 	}
 
 	private static int manhattan(WorldPoint point1, WorldPoint point2)

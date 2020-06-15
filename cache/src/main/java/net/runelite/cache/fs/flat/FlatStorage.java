@@ -132,7 +132,7 @@ public class FlatStorage implements Storage
 							fileData.add(fd);
 							continue;
 						}
-						else if (fileData != null)
+						else if (fileData != null && archive != null)
 						{
 							archive.setFileData(fileData.toArray(new FileData[0]));
 							fileData = null;
@@ -197,7 +197,7 @@ public class FlatStorage implements Storage
 					}
 				}
 
-				if (fileData != null)
+				if (fileData != null && archive != null)
 				{
 					archive.setFileData(fileData.toArray(new FileData[0]));
 					fileData = null;

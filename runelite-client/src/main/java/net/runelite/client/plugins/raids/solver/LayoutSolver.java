@@ -211,7 +211,9 @@ public class LayoutSolver
 
 				room = new Room(position, '¤');
 				room.setPrevious(lastRoom);
-				lastRoom.setNext(room);
+				if (lastRoom != null) {
+					lastRoom.setNext(room);
+				}
 				layout.add(room);
 				position += 8;
 			}
