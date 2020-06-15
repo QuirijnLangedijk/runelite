@@ -69,7 +69,7 @@ public class BlogService
 			}
 
 			try {
-				Document document = OSRSNewsService.createNewDocument(response)
+				Document document = OSRSNewsService.createNewDocument(response);
 				Element documentElement = document.getDocumentElement();
 				NodeList documentItems = documentElement.getElementsByTagName("entry");
 
