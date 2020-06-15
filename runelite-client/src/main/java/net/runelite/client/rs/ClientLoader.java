@@ -125,8 +125,8 @@ public class ClientLoader implements Supplier<Applet>
 			LOCK_FILE.getParentFile().mkdirs();
 			ClassLoader classLoader;
 			try (FileChannel lockfile = FileChannel.open(LOCK_FILE.toPath(),
-				StandardOpenOption.CREATE, StandardOpenOption.READ, StandardOpenOption.WRITE);
-				FileLock flock = lockfile.lock())
+					StandardOpenOption.CREATE, StandardOpenOption.READ, StandardOpenOption.WRITE);
+				 FileLock flock = lockfile.lock())
 			{
 				SplashScreen.stage(.05, null, "Downloading Old School RuneScape");
 				try
@@ -170,7 +170,7 @@ public class ClientLoader implements Supplier<Applet>
 			return rs;
 		}
 		catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException
-			| VerificationException | SecurityException e)
+				| VerificationException | SecurityException e)
 		{
 			log.error("Error loading RS!", e);
 
@@ -252,7 +252,7 @@ public class ClientLoader implements Supplier<Applet>
 		// we check this against what the server gives us to let us skip downloading and patching the whole thing
 
 		try (FileChannel vanilla = FileChannel.open(VANILLA_CACHE.toPath(),
-			StandardOpenOption.CREATE, StandardOpenOption.READ, StandardOpenOption.WRITE))
+				StandardOpenOption.CREATE, StandardOpenOption.READ, StandardOpenOption.WRITE))
 		{
 			long vanillaCacheMTime = -1;
 			boolean vanillaCacheIsInvalid = false;
@@ -295,8 +295,8 @@ public class ClientLoader implements Supplier<Applet>
 			for (int attempt = 0; ; attempt++)
 			{
 				Request request = new Request.Builder()
-					.url(url)
-					.build();
+						.url(url)
+						.build();
 
 				try (Response response = RuneLiteAPI.CLIENT.newCall(request).execute())
 				{
@@ -324,7 +324,7 @@ public class ClientLoader implements Supplier<Applet>
 					}
 					final int flength = length;
 					TeeInputStream copyStream = new TeeInputStream(new CountingInputStream(response.body().byteStream(),
-						read -> SplashScreen.stage(.05, .35, null, "Downloading Old School RuneScape", read, flength, true)));
+							read -> SplashScreen.stage(.05, .35, null, "Downloading Old School RuneScape", read, flength, true)));
 
 					// Save the bytes from the mtime test so we can write it to disk
 					// if the test fails, or the cache doesn't verify
@@ -412,10 +412,10 @@ public class ClientLoader implements Supplier<Applet>
 			if (is == null)
 			{
 				SwingUtilities.invokeLater(() ->
-					new FatalErrorDialog("The client-patch is missing from the classpath. If you are building " +
-						"the client you need to re-run maven")
-						.addBuildingGuide()
-						.open());
+						new FatalErrorDialog("The client-patch is missing from the classpath. If you are building " +
+								"the client you need to re-run maven")
+								.addBuildingGuide()
+								.open());
 				throw new NullPointerException();
 			}
 
@@ -447,7 +447,7 @@ public class ClientLoader implements Supplier<Applet>
 		}
 
 		try (HashingOutputStream hos = new HashingOutputStream(Hashing.sha512(), new FileOutputStream(PATCHED_CACHE));
-			InputStream patch = ClientLoader.class.getResourceAsStream("/client.patch"))
+			 InputStream patch = ClientLoader.class.getResourceAsStream("/client.patch"))
 		{
 			new FileByFileV1DeltaApplier().applyDelta(VANILLA_CACHE, patch, hos);
 

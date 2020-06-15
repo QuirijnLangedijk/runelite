@@ -29,10 +29,8 @@ import com.google.inject.Inject;
 import com.google.inject.testing.fieldbinder.Bind;
 import com.google.inject.testing.fieldbinder.BoundFieldModule;
 import java.awt.Color;
-import net.runelite.api.Client;
-import net.runelite.api.EquipmentInventorySlot;
-import net.runelite.api.InventoryID;
-import net.runelite.api.ItemContainer;
+
+import net.runelite.api.*;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.util.Text;
 import net.runelite.http.api.item.ItemEquipmentStats;
@@ -42,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -49,7 +48,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.MockitoJUnitRunner;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class ItemStatOverlayTest
 {
 	// Weapon definitions
@@ -64,6 +63,7 @@ public class ItemStatOverlayTest
 			.str(75)
 			.aspeed(4)
 			.build());
+
 	private static final ItemStats KATANA = new ItemStats(false, true, 0, 8,
 		ItemEquipmentStats.builder()
 			.slot(EquipmentInventorySlot.WEAPON.getSlotIdx())
@@ -76,6 +76,7 @@ public class ItemStatOverlayTest
 			.str(40)
 			.aspeed(4)
 			.build());
+
 	private static final ItemStats BLOWPIPE = new ItemStats(false, true, 0, 0,
 		ItemEquipmentStats.builder()
 			.slot(EquipmentInventorySlot.WEAPON.getSlotIdx())
@@ -83,11 +84,26 @@ public class ItemStatOverlayTest
 			.rstr(40)
 			.aspeed(3)
 			.build());
+
 	private static final ItemStats HEAVY_BALLISTA = new ItemStats(false, true, 4, 8,
 		ItemEquipmentStats.builder()
 			.slot(EquipmentInventorySlot.WEAPON.getSlotIdx())
 			.arange(110)
 			.aspeed(7)
+			.build());
+
+	// Arrange
+	private static final ItemStats SCYTHE_OF_VITUR_CHARGED = new ItemStats(false, true, 3.175, 1,
+		ItemEquipmentStats.builder()
+			.slot(EquipmentInventorySlot.WEAPON.getSlotIdx())
+			.astab(70)
+			.aslash(110)
+			.acrush(30)
+			.dstab(-2)
+			.dslash(8)
+			.dcrush(10)
+			.str(75)
+			.aspeed(5)
 			.build());
 
 	@Inject
@@ -122,6 +138,35 @@ public class ItemStatOverlayTest
 		assertEquals(-1, BLOWPIPE.getEquipment().getAspeed() - ItemStatOverlay.UNARMED.getEquipment().getAspeed());
 		assertEquals(3, HEAVY_BALLISTA.getEquipment().getAspeed() - ItemStatOverlay.UNARMED.getEquipment().getAspeed());
 	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testScytheStatBonus()
+	{
+		// Arrange
+		final ItemContainer equipment = mock(ItemContainer.class);
+		when(client.getItemContainer(InventoryID.EQUIPMENT)).thenReturn(equipment);
+		ItemStats s = null;
+
+		// Act
+		String errorExpected = overlay.buildStatBonusString(s);
+		String tooltip = overlay.buildStatBonusString(SCYTHE_OF_VITUR_CHARGED);
+		String sanitizedTooltip = Text.sanitizeMultilineText(tooltip);
+
+		// Assert
+		assertTrue(sanitizedTooltip.contains("Speed: +1"));
+		assertTrue(sanitizedTooltip.contains("Melee Str: +75"));
+
+		// Attack
+		assertTrue(sanitizedTooltip.contains("Stab: +70"));
+		assertTrue(sanitizedTooltip.contains("Slash: +110"));
+		assertTrue(sanitizedTooltip.contains("Crush: +30"));
+
+		// Defence
+		assertTrue(sanitizedTooltip.contains("Stab: -2"));
+		assertTrue(sanitizedTooltip.contains("Slash: +8"));
+		assertTrue(sanitizedTooltip.contains("Crush: +10"));
+	}
+
 
 	@Test
 	public void testBuildStatBonusString()

@@ -30,29 +30,28 @@ import net.runelite.cache.io.InputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 public class ItemLoader
 {
 	private static final Logger logger = LoggerFactory.getLogger(ItemLoader.class);
 
-	public ItemDefinition load(int id, byte[] b)
-	{
-		ItemDefinition def = new ItemDefinition(id);
-		InputStream is = new InputStream(b);
-		
-		while (true)
-		{
-			int opcode = is.readUnsignedByte();
-			if (opcode == 0)
-			{
-				break;
+	public ItemDefinition load(int id, byte[] b) throws IOException {
+		try (InputStream is = new InputStream(b)) {
+			ItemDefinition def = new ItemDefinition(id);
+
+			while (true) {
+				int opcode = is.readUnsignedByte();
+				if (opcode == 0) {
+					break;
+				}
+
+				this.decodeValues(opcode, def, is);
 			}
 
-			this.decodeValues(opcode, def, is);
+			return def;
 		}
-
-		return def;
 	}
 
 	private void decodeValues(int opcode, ItemDefinition def, InputStream stream)

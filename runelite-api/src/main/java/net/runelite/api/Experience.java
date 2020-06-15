@@ -171,10 +171,14 @@ public class Experience
 	 * @param prayerLevel the prayer level
 	 * @return the combat level, rounded down
 	 */
-	public static int getCombatLevel(int attackLevel, int strengthLevel,
-		int defenceLevel, int hitpointsLevel, int magicLevel,
+	public static int getCombatLevel(int attackLevel, int strengthLevel, int defenceLevel, int hitpointsLevel, int magicLevel,
 		int rangeLevel, int prayerLevel)
 	{
+		if (attackLevel < 1 || strengthLevel < 1 || defenceLevel < 1 || magicLevel < 1 || rangeLevel < 1 || prayerLevel < 1) {
+			throw new IllegalArgumentException("Values are below 1");
+		} else if (hitpointsLevel < 10) {
+			throw new IllegalArgumentException("Hitpoints Level is below 10");
+		}
 		return (int) getCombatLevelPrecise(attackLevel, strengthLevel, defenceLevel, hitpointsLevel, magicLevel, rangeLevel, prayerLevel);
 	}
 

@@ -105,7 +105,7 @@ class DpsOverlay extends OverlayPanel
 		DpsMember total = dpsCounterPlugin.getTotal();
 		boolean paused = total.isPaused();
 
-		final String title = (inParty ? "Party " : "") + (showDamage ? "Damage" : "DPS") + (paused ? " (paused)" : "");
+		final String title = formatTitle(inParty, showDamage, paused);
 		panelComponent.getChildren().add(
 			TitleComponent.builder()
 				.text(title)
@@ -131,7 +131,7 @@ class DpsOverlay extends OverlayPanel
 		if (!inParty)
 		{
 			Player player = client.getLocalPlayer();
-			if (player.getName() != null)
+			if (player != null && player.getName() != null)
 			{
 				DpsMember self = dpsMembers.get(player.getName());
 
@@ -158,5 +158,9 @@ class DpsOverlay extends OverlayPanel
 		{
 			getMenuEntries().add(add);
 		}
+	}
+
+	String formatTitle(boolean inParty, boolean showDamage, boolean paused) {
+		return (inParty ? "Party " : "") + (showDamage ? "Damage" : "DPS") + (paused ? " (paused)" : "");
 	}
 }

@@ -29,10 +29,11 @@ import net.runelite.cache.io.InputStream;
 import net.runelite.cache.region.Location;
 import net.runelite.cache.region.Position;
 
+import java.io.IOException;
+
 public class LocationsLoader
 {
-	public LocationsDefinition load(int regionX, int regionY, byte[] b)
-	{
+	public LocationsDefinition load(int regionX, int regionY, byte[] b) throws IOException {
 		LocationsDefinition loc = new LocationsDefinition();
 		loc.setRegionX(regionX);
 		loc.setRegionY(regionY);
@@ -40,33 +41,31 @@ public class LocationsLoader
 		return loc;
 	}
 
-	private void loadLocations(LocationsDefinition loc, byte[] b)
-	{
-		InputStream buf = new InputStream(b);
+	private void loadLocations(LocationsDefinition loc, byte[] b) throws IOException {
+		try(InputStream buf = new InputStream(b)) {
 
-		int id = -1;
-		int idOffset;
+			int id = -1;
+			int idOffset;
 
-		while ((idOffset = buf.readUnsignedIntSmartShortCompat()) != 0)
-		{
-			id += idOffset;
+			while ((idOffset = buf.readUnsignedIntSmartShortCompat()) != 0) {
+				id += idOffset;
 
-			int position = 0;
-			int positionOffset;
+				int position = 0;
+				int positionOffset;
 
-			while ((positionOffset = buf.readUnsignedShortSmart()) != 0)
-			{
-				position += positionOffset - 1;
+				while ((positionOffset = buf.readUnsignedShortSmart()) != 0) {
+					position += positionOffset - 1;
 
-				int localY = position & 0x3F;
-				int localX = position >> 6 & 0x3F;
-				int height = position >> 12 & 0x3;
+					int localY = position & 0x3F;
+					int localX = position >> 6 & 0x3F;
+					int height = position >> 12 & 0x3;
 
-				int attributes = buf.readUnsignedByte();
-				int type = attributes >> 2;
-				int orientation = attributes & 0x3;
+					int attributes = buf.readUnsignedByte();
+					int type = attributes >> 2;
+					int orientation = attributes & 0x3;
 
-				loc.getLocations().add(new Location(id, type, orientation, new Position(localX, localY, height)));
+					loc.getLocations().add(new Location(id, type, orientation, new Position(localX, localY, height)));
+				}
 			}
 		}
 	}

@@ -27,38 +27,43 @@ package net.runelite.cache.definitions.loaders;
 import net.runelite.cache.definitions.ParamDefinition;
 import net.runelite.cache.io.InputStream;
 import net.runelite.cache.util.ScriptVarType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class ParamLoader
-{
-	public ParamDefinition load(byte[] data)
-	{
-		ParamDefinition def = new ParamDefinition();
-		InputStream b = new InputStream(data);
+import java.io.IOException;
 
-		for (; ; )
-		{
-			int opcode = b.readUnsignedByte();
+public class ParamLoader {
+    private static final Logger logger = LoggerFactory.getLogger(ParamLoader.class);
 
-			switch (opcode)
-			{
-				case 0:
-					return def;
-				case 1:
-				{
-					int idx = b.readByte();
-					def.setType(ScriptVarType.forCharKey((char) idx));
-					break;
-				}
-				case 2:
-					def.setDefaultInt(b.readInt());
-					break;
-				case 4:
-					def.setMembers(false);
-					break;
-				case 5:
-					def.setDefaultString(b.readString());
-					break;
-			}
-		}
-	}
+    public ParamDefinition load(byte[] data) {
+        ParamDefinition def = new ParamDefinition();
+
+        try (InputStream b = new InputStream(data)) {
+            for (; ; ) {
+                int opcode = b.readUnsignedByte();
+
+                switch (opcode) {
+                    case 0:
+                        return def;
+                    case 1: {
+                        int idx = b.readByte();
+                        def.setType(ScriptVarType.forCharKey((char) idx));
+                        break;
+                    }
+                    case 2:
+                        def.setDefaultInt(b.readInt());
+                        break;
+                    case 4:
+                        def.setMembers(false);
+                        break;
+                    case 5:
+                        def.setDefaultString(b.readString());
+                        break;
+                }
+            }
+        } catch (IOException e) {
+            logger.error(String.valueOf(e));
+        }
+        return def;
+    }
 }

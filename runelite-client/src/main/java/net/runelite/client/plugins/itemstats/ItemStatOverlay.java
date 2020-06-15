@@ -243,6 +243,11 @@ public class ItemStatOverlay extends Overlay
 	String buildStatBonusString(ItemStats s)
 	{
 		ItemStats other = null;
+
+		if (s == null) {
+			throw new IllegalArgumentException("No Item given.");
+		}
+
 		final ItemEquipmentStats currentEquipment = s.getEquipment();
 
 		ItemContainer c = client.getItemContainer(InventoryID.EQUIPMENT);

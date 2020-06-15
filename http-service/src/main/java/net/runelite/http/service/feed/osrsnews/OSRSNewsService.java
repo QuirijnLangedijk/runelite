@@ -31,6 +31,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import net.runelite.http.api.RuneLiteAPI;
@@ -68,11 +69,7 @@ public class OSRSNewsService
 
 			try
 			{
-				InputStream in = response.body().byteStream();
-				Document document = DocumentBuilderFactory.newInstance()
-					.newDocumentBuilder()
-					.parse(in);
-
+				Document document = createNewDocument(response);
 				Element documentElement = document.getDocumentElement();
 				NodeList documentItems = documentElement.getElementsByTagName("item");
 
@@ -125,5 +122,13 @@ public class OSRSNewsService
 				throw new InternalServerErrorException("Failed to parse OSRS news: " + e.getMessage());
 			}
 		}
+	}
+
+	public static Document createNewDocument(Response response) throws ParserConfigurationException, IOException, SAXException {
+		InputStream in = response.body().byteStream();
+		DocumentBuilderFactory df = DocumentBuilderFactory.newInstance();
+		df.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, ""); // Compliant
+		df.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, ""); // compliant
+		return df.newDocumentBuilder().parse(in);
 	}
 }

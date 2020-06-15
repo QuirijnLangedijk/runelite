@@ -24,6 +24,7 @@
  */
 package net.runelite.cache.definitions.loaders;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import net.runelite.cache.definitions.ObjectDefinition;
@@ -38,23 +39,25 @@ public class ObjectLoader
 	public ObjectDefinition load(int id, byte[] b)
 	{
 		ObjectDefinition def = new ObjectDefinition();
-		InputStream is = new InputStream(b);
 
-		def.setId(id);
+		try (InputStream is = new InputStream(b)) {
 
-		for (;;)
-		{
-			int opcode = is.readUnsignedByte();
-			if (opcode == 0)
-			{
-				break;
+			def.setId(id);
+
+			for (; ; ) {
+				int opcode = is.readUnsignedByte();
+				if (opcode == 0) {
+					break;
+				}
+
+				processOp(opcode, def, is);
 			}
 
-			processOp(opcode, def, is);
+			post(def);
+
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-
-		post(def);
-
 		return def;
 	}
 

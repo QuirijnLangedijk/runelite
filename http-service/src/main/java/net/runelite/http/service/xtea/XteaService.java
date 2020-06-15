@@ -85,12 +85,16 @@ public class XteaService
 
 	private XteaEntry findLatestXtea(Connection con, int region)
 	{
-		return con.createQuery("select region, time, key1, key2, key3, key4 from xtea "
-			+ "where region = :region "
-			+ "order by time desc "
-			+ "limit 1")
-			.addParameter("region", region)
-			.executeAndFetchFirst(XteaEntry.class);
+		try {
+			return con.createQuery("select region, time, key1, key2, key3, key4 from xtea "
+					+ "where region = :region "
+					+ "order by time desc "
+					+ "limit 1")
+					.addParameter("region", region)
+					.executeAndFetchFirst(XteaEntry.class);
+		} finally {
+			con.close();
+		}
 	}
 
 	public void submit(XteaRequest xteaRequest)

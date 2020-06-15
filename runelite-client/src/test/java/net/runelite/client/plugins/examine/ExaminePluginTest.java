@@ -51,7 +51,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.MockitoJUnitRunner;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class ExaminePluginTest
 {
 	@Inject
@@ -95,6 +95,28 @@ public class ExaminePluginTest
 		examinePlugin.onChatMessage(chatMessage);
 
 		// This passes due to not mocking the ItemComposition for the whip
+		verify(examineClient).submitItem(anyInt(), anyString());
+	}
+
+	@Test
+	public void testItemOnGround()
+	{
+		// Arrange
+		when(client.getWidget(anyInt(), anyInt())).thenReturn(mock(Widget.class));
+		when(itemManager.getItemComposition(anyInt())).thenReturn(mock(ItemComposition.class));
+
+		MenuOptionClicked menuOptionClicked = new MenuOptionClicked();
+		menuOptionClicked.setMenuOption("Examine");
+		menuOptionClicked.setMenuAction(MenuAction.EXAMINE_ITEM_GROUND);
+		menuOptionClicked.setId(ItemID.KNIFE);
+
+		// Act
+		examinePlugin.onMenuOptionClicked(menuOptionClicked);
+
+		ChatMessage chatMessage = new ChatMessage(null, ChatMessageType.ITEM_EXAMINE, "", "Knife", "", 0);
+		examinePlugin.onChatMessage(chatMessage);
+
+		// Assert
 		verify(examineClient).submitItem(anyInt(), anyString());
 	}
 

@@ -29,71 +29,54 @@ import net.runelite.cache.io.InputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 public class KitLoader
 {
-	private static final Logger logger = LoggerFactory.getLogger(KitLoader.class);
+	public KitDefinition load(int id, byte[] b) throws IOException {
+		try(InputStream is = new InputStream(b)) {
+			KitDefinition def = new KitDefinition(id);
+			for (; ; ) {
+				int opcode = is.readUnsignedByte();
+				if (opcode == 0) {
+					break;
+				}
 
-	public KitDefinition load(int id, byte[] b)
-	{
-		KitDefinition def = new KitDefinition(id);
-		InputStream is = new InputStream(b);
+				if (opcode == 1) {
+					def.bodyPartId = is.readUnsignedByte();
+				} else if (opcode == 2) {
+					int length = is.readUnsignedByte();
+					def.models = new int[length];
 
-		for (;;)
-		{
-			int opcode = is.readUnsignedByte();
-			if (opcode == 0)
-			{
-				break;
-			}
+					for (int index = 0; index < length; ++index) {
+						def.models[index] = is.readUnsignedShort();
+					}
+				} else if (opcode == 3) {
+					def.nonSelectable = true;
+				} else if (opcode == 40) {
+					int length = is.readUnsignedByte();
+					def.recolorToFind = new short[length];
+					def.recolorToReplace = new short[length];
 
-			if (opcode == 1)
-			{
-				def.bodyPartId = is.readUnsignedByte();
-			}
-			else if (opcode == 2)
-			{
-				int length = is.readUnsignedByte();
-				def.models = new int[length];
+					for (int index = 0; index < length; ++index) {
+						def.recolorToFind[index] = is.readShort();
+						def.recolorToReplace[index] = is.readShort();
+					}
+				} else if (opcode == 41) {
+					int length = is.readUnsignedByte();
+					def.retextureToFind = new short[length];
+					def.retextureToReplace = new short[length];
 
-				for (int index = 0; index < length; ++index)
-				{
-					def.models[index] = is.readUnsignedShort();
+					for (int index = 0; index < length; ++index) {
+						def.retextureToFind[index] = is.readShort();
+						def.retextureToReplace[index] = is.readShort();
+					}
+				} else if (opcode >= 60 && opcode < 70) {
+					def.chatheadModels[opcode - 60] = is.readUnsignedShort();
 				}
 			}
-			else if (opcode == 3)
-			{
-				def.nonSelectable = true;
-			}
-			else if (opcode == 40)
-			{
-				int length = is.readUnsignedByte();
-				def.recolorToFind = new short[length];
-				def.recolorToReplace = new short[length];
 
-				for (int index = 0; index < length; ++index)
-				{
-					def.recolorToFind[index] = is.readShort();
-					def.recolorToReplace[index] = is.readShort();
-				}
-			}
-			else if (opcode == 41)
-			{
-				int length = is.readUnsignedByte();
-				def.retextureToFind = new short[length];
-				def.retextureToReplace = new short[length];
-
-				for (int index = 0; index < length; ++index)
-				{
-					def.retextureToFind[index] = is.readShort();
-					def.retextureToReplace[index] = is.readShort();
-				}
-			}
-			else if (opcode >= 60 && opcode < 70)
-			{
-				def.chatheadModels[opcode - 60] = is.readUnsignedShort();
-			}
+			return def;
 		}
-
-		return def;
 	}
 }

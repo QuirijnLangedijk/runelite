@@ -29,6 +29,8 @@ import net.runelite.cache.io.InputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 public class OverlayLoader
 {
 	private static final Logger logger = LoggerFactory.getLogger(OverlayLoader.class);
@@ -36,41 +38,35 @@ public class OverlayLoader
 	public OverlayDefinition load(int id, byte[] b)
 	{
 		OverlayDefinition def = new OverlayDefinition();
-		InputStream is = new InputStream(b);
 
-		def.setId(id);
+		try (InputStream is = new InputStream(b)) {
+			def.setId(id);
 
-		for (;;)
-		{
-			int opcode = is.readUnsignedByte();
-			if (opcode == 0)
-			{
-				break;
+			for (; ; ) {
+				int opcode = is.readUnsignedByte();
+				if (opcode == 0) {
+					break;
+				}
+
+				if (opcode == 1) {
+					int color = is.read24BitInt();
+					def.setRgbColor(color);
+				} else if (opcode == 2) {
+					int texture = is.readUnsignedByte();
+					def.setTexture(texture);
+				} else if (opcode == 5) {
+					def.setHideUnderlay(false);
+				} else if (opcode == 7) {
+					int secondaryColor = is.read24BitInt();
+					def.setSecondaryRgbColor(secondaryColor);
+				}
 			}
 
-			if (opcode == 1)
-			{
-				int color = is.read24BitInt();
-				def.setRgbColor(color);
-			}
-			else if (opcode == 2)
-			{
-				int texture = is.readUnsignedByte();
-				def.setTexture(texture);
-			}
-			else if (opcode == 5)
-			{
-				def.setHideUnderlay(false);
-			}
-			else if (opcode == 7)
-			{
-				int secondaryColor = is.read24BitInt();
-				def.setSecondaryRgbColor(secondaryColor);
-			}
+			def.calculateHsl();
+
+		} catch (IOException e) {
+			logger.error(String.valueOf(e));
 		}
-
-		def.calculateHsl();
-
 		return def;
 	}
 }

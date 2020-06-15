@@ -149,6 +149,29 @@ public class IdleNotifierPluginTest
 	}
 
 	@Test
+	public void checkMultipleAnimationsIdle()
+	{
+		// Arrange
+		when(player.getAnimation()).thenReturn(AnimationID.MINING_BLACK_PICKAXE);
+		AnimationChanged animationChanged = new AnimationChanged();
+		// Act
+		animationChanged.setActor(player);
+		plugin.onAnimationChanged(animationChanged);
+		plugin.onGameTick(new GameTick());
+
+		when(player.getAnimation()).thenReturn(AnimationID.DENSE_ESSENCE_CHIPPING);
+		plugin.onAnimationChanged(animationChanged);
+		plugin.onGameTick(new GameTick());
+
+		when(player.getAnimation()).thenReturn(AnimationID.IDLE);
+		plugin.onAnimationChanged(animationChanged);
+		plugin.onGameTick(new GameTick());
+
+		// Assert
+		verify(notifier).notify("[" + PLAYER_NAME + "] is now idle!");
+	}
+
+	@Test
 	public void checkAnimationReset()
 	{
 		when(player.getAnimation()).thenReturn(AnimationID.WOODCUTTING_BRONZE);

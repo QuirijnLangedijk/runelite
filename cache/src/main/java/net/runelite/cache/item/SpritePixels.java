@@ -58,35 +58,39 @@ class SpritePixels
 			for (int x = 0; x < this.width; ++x)
 			{
 				int pixel = this.pixels[pixelIndex];
-				if (pixel == 0)
-				{
-					// W
-					if (x > 0 && this.pixels[pixelIndex - 1] != 0)
-					{
-						pixel = color;
-					}
-					// N
-					else if (y > 0 && this.pixels[pixelIndex - this.width] != 0)
-					{
-						pixel = color;
-					}
-					// E
-					else if (x < this.width - 1 && this.pixels[pixelIndex + 1] != 0)
-					{
-						pixel = color;
-					}
-					// S
-					else if (y < this.height - 1 && this.pixels[pixelIndex + this.width] != 0)
-					{
-						pixel = color;
-					}
-				}
-
+				pixel = this.drawPixel(pixel, pixelIndex, x, y, color);
 				newPixels[pixelIndex++] = pixel;
 			}
 		}
 
 		this.pixels = newPixels;
+	}
+
+	public int drawPixel(int pixel, int pixelIndex, int x, int y, int color) {
+		if (pixel == 0)
+		{
+			// W
+			if (x > 0 && this.pixels[pixelIndex - 1] != 0)
+			{
+				pixel = color;
+			}
+			// N
+			else if (y > 0 && this.pixels[pixelIndex - this.width] != 0)
+			{
+				pixel = color;
+			}
+			// E
+			else if (x < this.width - 1 && this.pixels[pixelIndex + 1] != 0)
+			{
+				pixel = color;
+			}
+			// S
+			else if (y < this.height - 1 && this.pixels[pixelIndex + this.width] != 0)
+			{
+				pixel = color;
+			}
+		}
+		return pixel;
 	}
 
 

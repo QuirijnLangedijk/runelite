@@ -333,63 +333,67 @@ public class TabInterface
 					.build();
 				break;
 			case NewTab.IMPORT_TAB:
-				try
-				{
-					final String dataString = Toolkit
-						.getDefaultToolkit()
-						.getSystemClipboard()
-						.getData(DataFlavor.stringFlavor)
-						.toString()
-						.trim();
-
-					final Iterator<String> dataIter = Text.fromCSV(dataString).iterator();
-					String name = dataIter.next();
-					StringBuffer sb = new StringBuffer();
-					for (char c : name.toCharArray())
-					{
-						if (FILTERED_CHARS.test(c))
-						{
-							sb.append(c);
-						}
-					}
-
-					if (sb.length() == 0)
-					{
-						notifier.notify("Failed to import tag tab from clipboard, invalid format.");
-						return;
-					}
-
-					name = sb.toString();
-
-					final String icon = dataIter.next();
-					tabManager.setIcon(name, icon);
-
-					while (dataIter.hasNext())
-					{
-						final int itemId = Integer.valueOf(dataIter.next());
-						tagManager.addTag(itemId, name, itemId < 0);
-					}
-
-					loadTab(name);
-					tabManager.save();
-					scrollTab(0);
-
-					if (activeTab != null && name.equals(activeTab.getTag()))
-					{
-						openTag(activeTab.getTag());
-					}
-
-					notifier.notify("Tag tab " + name + " has been imported from your clipboard!");
-				}
-				catch (UnsupportedFlavorException | NoSuchElementException | IOException | NumberFormatException ex)
-				{
-					notifier.notify("Failed to import tag tab from clipboard, invalid format.");
-				}
+				this.createImportTab();
 				break;
 			case NewTab.OPEN_TAB_MENU:
 				client.setVarbit(Varbits.CURRENT_BANK_TAB, 0);
 				openTag(TAB_MENU_KEY);
 				break;
+		}
+	}
+
+	private void createImportTab() {
+		try
+		{
+			final String dataString = Toolkit
+					.getDefaultToolkit()
+					.getSystemClipboard()
+					.getData(DataFlavor.stringFlavor)
+					.toString()
+					.trim();
+
+			final Iterator<String> dataIter = Text.fromCSV(dataString).iterator();
+			String name = dataIter.next();
+			StringBuffer sb = new StringBuffer();
+			for (char c : name.toCharArray())
+			{
+				if (FILTERED_CHARS.test(c))
+				{
+					sb.append(c);
+				}
+			}
+
+			if (sb.length() == 0)
+			{
+				notifier.notify("Failed to import tag tab from clipboard, invalid format.");
+				return;
+			}
+
+			name = sb.toString();
+
+			final String icon = dataIter.next();
+			tabManager.setIcon(name, icon);
+
+			while (dataIter.hasNext())
+			{
+				final int itemId = Integer.valueOf(dataIter.next());
+				tagManager.addTag(itemId, name, itemId < 0);
+			}
+
+			loadTab(name);
+			tabManager.save();
+			scrollTab(0);
+
+			if (activeTab != null && name.equals(activeTab.getTag()))
+			{
+				openTag(activeTab.getTag());
+			}
+
+			notifier.notify("Tag tab " + name + " has been imported from your clipboard!");
+		}
+		catch (UnsupportedFlavorException | NoSuchElementException | IOException | NumberFormatException ex)
+		{
+			notifier.notify("Failed to import tag tab from clipboard, invalid format.");
 		}
 	}
 

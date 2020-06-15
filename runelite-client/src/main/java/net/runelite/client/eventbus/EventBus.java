@@ -129,13 +129,7 @@ public class EventBus
 				Preconditions.checkArgument(!parameterClazz.isPrimitive(), "@Subscribed method \"" + method + "\" cannot subscribe to primitives");
 				Preconditions.checkArgument((parameterClazz.getModifiers() & (Modifier.ABSTRACT | Modifier.INTERFACE)) == 0, "@Subscribed method \"" + method + "\" cannot subscribe to polymorphic classes");
 
-				for (Class<?> psc = parameterClazz.getSuperclass(); psc != null; psc = psc.getSuperclass())
-				{
-					if (subscribers.containsKey(psc))
-					{
-						throw new IllegalArgumentException("@Subscribed method \"" + method + "\" cannot subscribe to class which inherits from subscribed class \"" + psc + "\"");
-					}
-				}
+				this.checkMethod(parameterClazz, method);
 
 				final String preferredName = "on" + parameterClazz.getSimpleName();
 				Preconditions.checkArgument(method.getName().equals(preferredName), "Subscribed method " + method + " should be named " + preferredName);
@@ -171,6 +165,16 @@ public class EventBus
 		}
 
 		subscribers = builder.build();
+	}
+
+	private void checkMethod(Class<?> parameterClass, Method method) {
+		for (Class<?> psc = parameterClass.getSuperclass(); psc != null; psc = psc.getSuperclass())
+		{
+			if (subscribers.containsKey(psc))
+			{
+				throw new IllegalArgumentException("@Subscribed method \"" + method + "\" cannot subscribe to class which inherits from subscribed class \"" + psc + "\"");
+			}
+		}
 	}
 
 	/**

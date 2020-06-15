@@ -27,26 +27,27 @@ package net.runelite.cache.definitions.loaders;
 import net.runelite.cache.definitions.AreaDefinition;
 import net.runelite.cache.io.InputStream;
 
+import java.io.IOException;
+
 public class AreaLoader
 {
-	public AreaDefinition load(byte[] b, int id)
-	{
-		InputStream in = new InputStream(b);
-		AreaDefinition def = new AreaDefinition();
-		def.id = id;
+	public AreaDefinition load(byte[] b, int id) throws IOException {
+		try(InputStream in = new InputStream(b)) {
+			AreaDefinition def = new AreaDefinition();
+			def.id = id;
 
-		for (;;)
-		{
-			int opcode = in.readUnsignedByte();
-			if (opcode == 0)
+			for (;;)
 			{
-				break;
+				int opcode = in.readUnsignedByte();
+				if (opcode == 0)
+				{
+					break;
+				}
+
+				processOpcode(def, in, opcode);
 			}
-
-			processOpcode(def, in, opcode);
+			return def;
 		}
-
-		return def;
 	}
 
 	private void processOpcode(AreaDefinition def, InputStream in, int opcode)

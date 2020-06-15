@@ -169,15 +169,9 @@ class Model extends Renderable
 			int x = this.verticesX[i];
 			int y = this.verticesY[i];
 			int z = this.verticesZ[i];
-			if (zRotation != 0)
-			{
-				int sinZ = Model_sine[zRotation];
-				int cosZ = Model_cosine[zRotation];
-				int tmp;
-				tmp = y * sinZ + x * cosZ >> 16;
-				y = y * cosZ - x * sinZ >> 16;
-				x = tmp;
-			}
+			int[] zrotation = this.calc(zRotation, z, x);
+			z = zrotation[0];
+			x = zrotation[1];
 
 			if (rotation_1 != 0)
 			{
@@ -189,15 +183,9 @@ class Model extends Renderable
 				y = tmp;
 			}
 
-			if (yRotation != 0)
-			{
-				int sinY = Model_sine[yRotation];
-				int cosY = Model_cosine[yRotation];
-				int tmp;
-				tmp = z * sinY + x * cosY >> 16;
-				z = z * cosY - x * sinY >> 16;
-				x = tmp;
-			}
+			int[] yrotation = this.calc(yRotation, z, x);
+			z = yrotation[0];
+			x = yrotation[1];
 
 			x += xOffset;
 			y += yOffset;
@@ -218,6 +206,19 @@ class Model extends Renderable
 		this.method0(graphics, false, false, 0);
 	}
 
+	private int[] calc(int rotation, int z, int x) {
+		if (rotation != 0)
+		{
+			int sinY = Model_sine[rotation];
+			int cosY = Model_cosine[rotation];
+			int tmp;
+			tmp = z * sinY + x * cosY >> 16;
+			z = z * cosY - x * sinY >> 16;
+			x = tmp;
+		}
+
+		return new int[]{z, x};
+	}
 
 	private void method0(Graphics3D graphics, boolean var1, boolean var3, int var4)
 	{

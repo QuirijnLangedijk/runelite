@@ -24,10 +24,14 @@
  */
 package net.runelite.cache.definitions.savers;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 import net.runelite.cache.definitions.ScriptDefinition;
 import net.runelite.cache.io.OutputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static net.runelite.cache.script.Opcodes.SCONST;
 import static net.runelite.cache.script.Opcodes.POP_INT;
 import static net.runelite.cache.script.Opcodes.POP_STRING;
@@ -35,57 +39,52 @@ import static net.runelite.cache.script.Opcodes.RETURN;
 
 public class ScriptSaver
 {
+	private static final Logger logger = LoggerFactory.getLogger(ScriptSaver.class);
+
 	public byte[] save(ScriptDefinition script)
 	{
-		int[] instructions = script.getInstructions();
-		int[] intOperands = script.getIntOperands();
-		String[] stringOperands = script.getStringOperands();
-		Map<Integer, Integer>[] switches = script.getSwitches();
+		try(OutputStream out = new OutputStream()) {
+			int[] instructions = script.getInstructions();
+			int[] intOperands = script.getIntOperands();
+			String[] stringOperands = script.getStringOperands();
+			Map<Integer, Integer>[] switches = script.getSwitches();
 
-		OutputStream out = new OutputStream();
-		out.writeByte(0); // null string
-		for (int i = 0; i < instructions.length; ++i)
-		{
-			int opcode = instructions[i];
-			out.writeShort(opcode);
-			if (opcode == SCONST)
-			{
-				out.writeString(stringOperands[i]);
-			}
-			else if (opcode < 100 && opcode != RETURN && opcode != POP_INT && opcode != POP_STRING)
-			{
-				out.writeInt(intOperands[i]);
-			}
-			else
-			{
-				out.writeByte(intOperands[i]);
-			}
-		}
-		out.writeInt(instructions.length);
-		out.writeShort(script.getLocalIntCount());
-		out.writeShort(script.getLocalStringCount());
-		out.writeShort(script.getIntStackCount());
-		out.writeShort(script.getStringStackCount());
-		int switchStart = out.getOffset();
-		if (switches == null)
-		{
-			out.writeByte(0);
-		}
-		else
-		{
-			out.writeByte(switches.length);
-			for (Map<Integer, Integer> s : switches)
-			{
-				out.writeShort(s.size());
-				for (Entry<Integer, Integer> e : s.entrySet())
-				{
-					out.writeInt(e.getKey());
-					out.writeInt(e.getValue());
+			out.writeByte(0); // null string
+			for (int i = 0; i < instructions.length; ++i) {
+				int opcode = instructions[i];
+				out.writeShort(opcode);
+				if (opcode == SCONST) {
+					out.writeString(stringOperands[i]);
+				} else if (opcode < 100 && opcode != RETURN && opcode != POP_INT && opcode != POP_STRING) {
+					out.writeInt(intOperands[i]);
+				} else {
+					out.writeByte(intOperands[i]);
 				}
 			}
+			out.writeInt(instructions.length);
+			out.writeShort(script.getLocalIntCount());
+			out.writeShort(script.getLocalStringCount());
+			out.writeShort(script.getIntStackCount());
+			out.writeShort(script.getStringStackCount());
+			int switchStart = out.getOffset();
+			if (switches == null) {
+				out.writeByte(0);
+			} else {
+				out.writeByte(switches.length);
+				for (Map<Integer, Integer> s : switches) {
+					out.writeShort(s.size());
+					for (Entry<Integer, Integer> e : s.entrySet()) {
+						out.writeInt(e.getKey());
+						out.writeInt(e.getValue());
+					}
+				}
+			}
+			int switchLength = out.getOffset() - switchStart;
+			out.writeShort(switchLength);
+			return out.flip();
+		} catch (IOException e) {
+			logger.error(String.valueOf(e));
+			return null;
 		}
-		int switchLength = out.getOffset() - switchStart;
-		out.writeShort(switchLength);
-		return out.flip();
 	}
 }

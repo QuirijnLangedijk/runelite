@@ -123,9 +123,10 @@ public class Cache
 
 	private static Store loadStore(String cache) throws IOException
 	{
-		Store store = new Store(new File(cache));
-		store.load();
-		return store;
+		try(Store store = new Store(new File(cache))) {
+			store.load();
+			return store;
+		}
 	}
 
 	private static void dumpItems(Store store, File itemdir) throws IOException
