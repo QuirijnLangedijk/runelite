@@ -87,14 +87,9 @@ public class SceneOverlay extends Overlay
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
-		if (plugin.getChunkBorders().isActive())
+		if (plugin.getChunkBorders().isActive() || plugin.getMapSquares().isActive())
 		{
 			renderChunkBorders(graphics);
-		}
-
-		if (plugin.getMapSquares().isActive())
-		{
-			renderMapSquares(graphics);
 		}
 
 		if (plugin.getLineOfSight().isActive())
@@ -180,71 +175,6 @@ public class SceneOverlay extends Overlay
 		graphics.draw(path);
 	}
 
-	private void renderMapSquares(Graphics2D graphics)
-	{
-		WorldPoint wp = client.getLocalPlayer().getWorldLocation();
-		int startX = (wp.getX() - CULL_CHUNK_BORDERS_RANGE + MAP_SQUARE_SIZE - 1) / MAP_SQUARE_SIZE * MAP_SQUARE_SIZE;
-		int startY = (wp.getY() - CULL_CHUNK_BORDERS_RANGE + MAP_SQUARE_SIZE - 1) / MAP_SQUARE_SIZE * MAP_SQUARE_SIZE;
-		int endX = (wp.getX() + CULL_CHUNK_BORDERS_RANGE) / MAP_SQUARE_SIZE * MAP_SQUARE_SIZE;
-		int endY = (wp.getY() + CULL_CHUNK_BORDERS_RANGE) / MAP_SQUARE_SIZE * MAP_SQUARE_SIZE;
-
-		graphics.setStroke(new BasicStroke(STROKE_WIDTH));
-		graphics.setColor(MAP_SQUARE_COLOR);
-
-		GeneralPath path = new GeneralPath();
-		for (int x = startX; x <= endX; x += MAP_SQUARE_SIZE)
-		{
-			LocalPoint lp1 = LocalPoint.fromWorld(client, x, wp.getY() - CULL_CHUNK_BORDERS_RANGE);
-			LocalPoint lp2 = LocalPoint.fromWorld(client, x, wp.getY() + CULL_CHUNK_BORDERS_RANGE);
-
-			boolean first = true;
-			for (int y = lp1.getY(); y <= lp2.getY(); y += LOCAL_TILE_SIZE)
-			{
-				Point p = Perspective.localToCanvas(client,
-					new LocalPoint(lp1.getX() - LOCAL_TILE_SIZE / 2, y - LOCAL_TILE_SIZE / 2),
-					client.getPlane());
-				if (p != null)
-				{
-					if (first)
-					{
-						path.moveTo(p.getX(), p.getY());
-						first = false;
-					}
-					else
-					{
-						path.lineTo(p.getX(), p.getY());
-					}
-				}
-			}
-		}
-		for (int y = startY; y <= endY; y += MAP_SQUARE_SIZE)
-		{
-			LocalPoint lp1 = LocalPoint.fromWorld(client, wp.getX() - CULL_CHUNK_BORDERS_RANGE, y);
-			LocalPoint lp2 = LocalPoint.fromWorld(client, wp.getX() + CULL_CHUNK_BORDERS_RANGE, y);
-
-			boolean first = true;
-			for (int x = lp1.getX(); x <= lp2.getX(); x += LOCAL_TILE_SIZE)
-			{
-				Point p = Perspective.localToCanvas(client,
-					new LocalPoint(x - LOCAL_TILE_SIZE / 2, lp1.getY() - LOCAL_TILE_SIZE / 2),
-					client.getPlane());
-				if (p != null)
-				{
-					if (first)
-					{
-						path.moveTo(p.getX(), p.getY());
-						first = false;
-					}
-					else
-					{
-						path.lineTo(p.getX(), p.getY());
-					}
-				}
-			}
-		}
-		graphics.draw(path);
-	}
-
 	private void renderTileIfValidForMovement(Graphics2D graphics, Actor actor, int dx, int dy)
 	{
 		WorldArea area = actor.getWorldArea();
@@ -286,25 +216,21 @@ public class SceneOverlay extends Overlay
 	{
 		Player player = client.getLocalPlayer();
 		List<NPC> npcs = client.getNpcs();
+		assert player != null;
+
 		for (NPC npc : npcs)
 		{
 			if (player.getInteracting() != npc && npc.getInteracting() != player)
 			{
 				continue;
 			}
-			for (int dx = -1; dx <= 1; dx++)
-			{
-				for (int dy = -1; dy <= 1; dy++)
-				{
-					if (dx == 0 && dy == 0)
-					{
-						continue;
-					}
-					renderTileIfValidForMovement(graphics, npc, dx, dy);
-				}
-			}
+			renderTile(graphics,npc);
 		}
 
+		renderTile(graphics, player);
+	}
+
+	private void renderTile(Graphics2D graphics, Actor actor) {
 		for (int dx = -1; dx <= 1; dx++)
 		{
 			for (int dy = -1; dy <= 1; dy++)
@@ -313,7 +239,7 @@ public class SceneOverlay extends Overlay
 				{
 					continue;
 				}
-				renderTileIfValidForMovement(graphics, player, dx, dy);
+				renderTileIfValidForMovement(graphics, actor, dx, dy);
 			}
 		}
 	}
