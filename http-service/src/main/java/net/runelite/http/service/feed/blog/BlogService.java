@@ -31,6 +31,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import net.runelite.http.api.RuneLiteAPI;
@@ -67,10 +68,8 @@ public class BlogService
 				throw new IOException("Error getting blog posts: " + response);
 			}
 
-			try
-			{
+			try {
 				Document document = OSRSNewsService.createNewDocument(response);
-
 				Element documentElement = document.getDocumentElement();
 				NodeList documentItems = documentElement.getElementsByTagName("entry");
 

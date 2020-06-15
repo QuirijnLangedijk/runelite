@@ -70,7 +70,6 @@ public class OSRSNewsService
 			try
 			{
 				Document document = createNewDocument(response);
-
 				Element documentElement = document.getDocumentElement();
 				NodeList documentItems = documentElement.getElementsByTagName("item");
 
